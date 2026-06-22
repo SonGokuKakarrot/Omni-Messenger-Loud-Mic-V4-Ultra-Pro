@@ -19,7 +19,7 @@
       </label>
     </section>
 
-    <div id="hookStatus" class="status">Hook status: checking Facebook or Messenger tab...</div>
+    <div id="hookStatus" class="status">Hook status: checking Facebook, Messenger, or Instagram tab...</div>
 
     <section class="presets" aria-label="Lord Modes">
       <div class="sectionTitle">
@@ -36,20 +36,20 @@
           <small>200000x raw-lock dominance</small>
         </button>
       </div>
-      <p class="hint">If Facebook or Messenger crackles or clips, use Royal Clear or lower Gain, Loudness, Drive, or Sustain Max Gain.</p>
+      <p class="hint">If Facebook, Messenger, or Instagram crackles or clips, use Royal Clear or lower Gain, Loudness, Drive, or Sustain Max Gain.</p>
     </section>
 
     <section class="controls" aria-label="Mic boost controls">
       <div class="field"><label for="gainDb">Gain <em>dB / multiplier</em></label><input id="gainDb" type="range" min="0" max="120" step="0.01" value="106.0206" /><output id="gainDbVal"></output></div>
       <div class="field"><label for="loudness">Loudness Trim</label><input id="loudness" type="range" min="0.5" max="200000" step="0.1" value="1" /><output id="loudnessVal"></output></div>
       <div class="field"><label for="maxBoost">Boost ceiling</label><input id="maxBoost" type="range" min="1" max="200000" step="1" value="200000" /><output id="maxBoostVal"></output></div>
-      <div class="field"><label for="drive">Saturation Drive</label><input id="drive" type="range" min="0" max="10" step="0.01" value="1.2" /><output id="driveVal"></output></div>
+      <div class="field"><label for="drive">Saturation Drive</label><input id="drive" type="range" min="0" max="10" step="0.01" value="1.5" /><output id="driveVal"></output></div>
       <div class="field"><label for="thresholdDb">Compressor Threshold <em>dB</em></label><input id="thresholdDb" type="range" min="-100" max="0" value="-60" /><output id="thresholdDbVal"></output></div>
       <div class="field"><label for="ratio">Compressor Ratio</label><input id="ratio" type="range" min="1" max="20" step="0.5" value="20" /><output id="ratioVal"></output></div>
       <div class="field"><label for="limiterDb">Limiter Ceiling <em>dB</em></label><input id="limiterDb" type="range" min="-24" max="0" step="0.1" value="-0.1" /><output id="limiterDbVal"></output></div>
-      <div class="field"><label for="presenceDb">Presence EQ <em>dB</em></label><input id="presenceDb" type="range" min="-60" max="60" value="20" /><output id="presenceDbVal"></output></div>
+      <div class="field"><label for="presenceDb">Presence EQ <em>dB</em></label><input id="presenceDb" type="range" min="-60" max="60" value="24" /><output id="presenceDbVal"></output></div>
       <div class="field"><label for="lowShelfDb">Bass EQ <em>dB</em></label><input id="lowShelfDb" type="range" min="-60" max="60" value="14" /><output id="lowShelfDbVal"></output></div>
-      <div class="field"><label for="highShelfDb">Treble EQ <em>dB</em></label><input id="highShelfDb" type="range" min="-60" max="60" value="16" /><output id="highShelfDbVal"></output></div>
+      <div class="field"><label for="highShelfDb">Treble EQ <em>dB</em></label><input id="highShelfDb" type="range" min="-60" max="60" value="18" /><output id="highShelfDbVal"></output></div>
       <label class="checkField" for="sustain"><input id="sustain" type="checkbox" /> Anti-duck sustain lock</label>
       <label class="checkField" for="forceRawMic"><input id="forceRawMic" type="checkbox" /> Raw mic constraint lock</label>
       <label class="checkField" for="reverbEnabled"><input id="reverbEnabled" type="checkbox" /> Reverb keep-alive layer</label>
@@ -57,11 +57,11 @@
       <div class="field"><label for="sustainTargetDb">Sustain Target <em>dB</em></label><input id="sustainTargetDb" type="range" min="-24" max="12" step="1" value="5" /><output id="sustainTargetDbVal"></output></div>
       <div class="field"><label for="sustainMaxGain">Sustain Max Gain</label><input id="sustainMaxGain" type="range" min="1" max="160" step="1" value="120" /><output id="sustainMaxGainVal"></output></div>
       <div class="field"><label for="reverbWet">Reverb Wet Mix</label><input id="reverbWet" type="range" min="0" max="0.6" step="0.01" value="0.18" /><output id="reverbWetVal"></output></div>
-      <div class="field"><label for="keepAliveGain">Keep-Alive Floor</label><input id="keepAliveGain" type="range" min="0" max="0.003" step="0.00005" value="0.00035" /><output id="keepAliveGainVal"></output></div>
+      <div class="field"><label for="keepAliveGain">Keep-Alive Floor</label><input id="keepAliveGain" type="range" min="0" max="0.003" step="0.00005" value="0.0012" /><output id="keepAliveGainVal"></output></div>
     </section>
 
-    <footer>Quetta/Android note: install as an unpacked/signed extension, open Facebook or Messenger Web, reload the tab, then join the call. 200000x is intentionally extreme and may clip on some devices.</footer>
+    <footer>Quetta/Android note: install as an unpacked/signed extension, open Facebook, Messenger, or Instagram Web, reload the tab, then join the call. 200000x is intentionally extreme and may clip on some devices.</footer>
   </main>
   <script src="popup.js"></script>
 </body>
-</html>
+</html> 
