@@ -4,7 +4,7 @@
 
   const HAS_PROMISE_API = typeof globalThis.browser !== 'undefined' && EXT === globalThis.browser;
   const DEFAULTS = {
-    profileVersion: 5,
+    profileVersion: 7,
     enabled: true,
     gainDb: 106.0206,
     thresholdDb: -60,
@@ -13,10 +13,10 @@
     attack: 0.0001,
     release: 0.03,
     lowShelfDb: 14,
-    presenceDb: 20,
-    highShelfDb: 16,
+    presenceDb: 24,
+    highShelfDb: 18,
     limiterDb: -0.1,
-    drive: 1.2,
+    drive: 1.5,
     loudness: 1.0,
     maxBoost: 200000,
     sustain: true,
@@ -28,8 +28,8 @@
     reverbFeedback: 0.35,
     reverbWet: 0.18,
     keepAlive: true,
-    keepAliveGain: 0.00035,
-    senderRefreshMs: 500
+    keepAliveGain: 0.0012,
+    senderRefreshMs: 250
   };
   const MSG_CFG = 'MIC_MAXIMIZER_CONFIG';
   let hookReady = false;
