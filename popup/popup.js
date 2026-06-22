@@ -1,18 +1,18 @@
 const EXT = globalThis.browser ?? globalThis.chrome;
 const HAS_PROMISE_API = typeof globalThis.browser !== 'undefined' && EXT === globalThis.browser;
 const DEFAULTS = {
-  profileVersion: 5,
+  profileVersion: 7,
   enabled: true,
   gainDb: 106.0206,
   loudness: 1.0,
   maxBoost: 200000,
-  drive: 1.2,
+  drive: 1.5,
   thresholdDb: -60,
   ratio: 20,
   limiterDb: -0.1,
-  presenceDb: 20,
+  presenceDb: 24,
   lowShelfDb: 14,
-  highShelfDb: 16,
+  highShelfDb: 18,
   sustain: true,
   sustainTargetDb: 5,
   sustainMaxGain: 120,
@@ -22,12 +22,12 @@ const DEFAULTS = {
   reverbFeedback: 0.35,
   reverbWet: 0.18,
   keepAlive: true,
-  keepAliveGain: 0.00035,
-  senderRefreshMs: 500
+  keepAliveGain: 0.0012,
+  senderRefreshMs: 250
 };
 const PRESETS = {
   royal: {
-    profileVersion: 5,
+    profileVersion: 7,
     enabled: true,
     gainDb: 24,
     loudness: 4,
@@ -52,18 +52,18 @@ const PRESETS = {
     senderRefreshMs: 750
   },
   lord: {
-    profileVersion: 5,
+    profileVersion: 7,
     enabled: true,
     gainDb: 106.0206,
     loudness: 1,
     maxBoost: 200000,
-    drive: 1.2,
+    drive: 1.5,
     thresholdDb: -60,
     ratio: 20,
     limiterDb: -0.1,
-    presenceDb: 20,
+    presenceDb: 24,
     lowShelfDb: 14,
-    highShelfDb: 16,
+    highShelfDb: 18,
     sustain: true,
     sustainTargetDb: 5,
     sustainMaxGain: 120,
@@ -73,8 +73,8 @@ const PRESETS = {
     reverbFeedback: 0.35,
     reverbWet: 0.18,
     keepAlive: true,
-    keepAliveGain: 0.00035,
-    senderRefreshMs: 500
+    keepAliveGain: 0.0012,
+    senderRefreshMs: 250
   }
 };
 const ids = Object.keys(DEFAULTS).filter((id) => id !== 'profileVersion');
@@ -209,10 +209,10 @@ async function refreshHookStatus() {
     const status = await sendMessage({ type: 'MICMAX_STATUS_REQUEST' });
     const ageMs = status?.lastHeartbeat ? Date.now() - status.lastHeartbeat : Infinity;
     if (status?.ok && ageMs < 12000) {
-      el.textContent = 'Hook status: ACTIVE on Facebook/Messenger';
+      el.textContent = 'Hook status: ACTIVE on Facebook/Messenger/Instagram';
       el.className = 'status ok';
     } else {
-      el.textContent = 'Hook status: waiting — open or reload Facebook/Messenger Web';
+      el.textContent = 'Hook status: waiting — open or reload Facebook/Messenger/Instagram Web';
       el.className = 'status warn';
     }
   } catch (_) {
