@@ -1,4 +1,4 @@
-# Omni Messenger Lord V4 Pro
+# Omni Messenger And Insta Lord V4 Pro
 
 **Developed by Omni**
 
@@ -8,6 +8,8 @@
 - `https://*.facebook.com/*`
 - `https://messenger.com/*`
 - `https://*.messenger.com/*`
+- `https://instagram.com/*`
+- `https://*.instagram.com/*`
 
 # Here’s the simple direction for MAXIMUM loudness:
 **✅ Increase these options (move slider to the right):**
