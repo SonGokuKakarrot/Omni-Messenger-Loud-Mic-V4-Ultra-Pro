@@ -93,11 +93,20 @@
 
   EXT.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.micMaximizerConfig) {
-      pushConfig({ ...DEFAULTS, ...(changes.micMaximizerConfig.newValue || {}) });
+      sync();
     }
   });
 
-  setInterval(sync, 3500);
-  setInterval(heartbeat, 5000);
-  sync();
+  // Periodic sync and heartbeat
+  setInterval(() => {
+    if (hookReady) {
+      sync();
+      heartbeat();
+    }
+  }, 8000);
+
+  // Initial sync attempt
+  setTimeout(sync, 1500);
+
+  console.log('[Omni Messenger Lord V4] content service loaded');
 })();
