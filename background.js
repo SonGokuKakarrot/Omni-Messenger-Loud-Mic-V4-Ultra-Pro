@@ -36,8 +36,8 @@ if (EXT?.runtime?.onMessage) {
     }
 
     if (message.type === 'MICMAX_RESET_STATUS') {
-      state.hookActiveTabs.clear();
       state.lastHeartbeat = 0;
+      state.hookActiveTabs.clear();
       reply(sendResponse, { ok: true });
       return false;
     }
@@ -45,3 +45,17 @@ if (EXT?.runtime?.onMessage) {
     return false;
   });
 }
+
+// Optional: clean up inactive tabs
+setInterval(() => {
+  if (EXT?.tabs?.query) {
+    EXT.tabs.query({ status: 'complete' }, (tabs) => {
+      const activeIds = new Set(tabs.map(t => t.id));
+      for (const id of state.hookActiveTabs) {
+        if (!activeIds.has(id)) state.hookActiveTabs.delete(id);
+      }
+    });
+  }
+}, 30000);
+
+console.log('[Omni Messenger Lord V4] background service started');
