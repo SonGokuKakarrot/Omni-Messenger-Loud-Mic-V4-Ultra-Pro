@@ -108,7 +108,10 @@
     } catch (_) {
       try { param.value = safeValue; } catch (_) {}
     }
-@@ -100,50 +115,54 @@
+  }
+
+  function applyPipeline(pipeline, raw) {
+    if (!pipeline || !raw) return;
     const c = raw.enabled ? raw : {
       ...raw,
       lowShelfDb: 0,
@@ -163,10 +166,18 @@
       const sample = (buffer[i] - 128) / 128;
       sum += sample * sample;
     }
-@@ -164,165 +183,222 @@
-        return;
-      }
-      resumePipeline(pipeline);
+    const rms = Math.sqrt(sum / buffer.length);
+    return 20 * Math.log10(Math.max(rms, 0.00001));
+  }
+
+  function startSustainController(pipeline) {
+    if (!pipeline || pipeline.sustainTimer) return;
+    const { ctx, nodes } = pipeline;
+    const c = cfg();
+    const buffer = new Uint8Array(nodes.meter.fftSize);
+    let currentGain = 1;
+    pipeline.sustainTimer = setInterval(() => {
+      if (!c.sustain || !nodes.sustain) return;
       const db = rmsDbFromAnalyser(nodes.meter, buffer);
       const target = c.sustainTargetDb;
       if (db < target) {
@@ -386,7 +397,13 @@
         ? rawMicAudioConstraints(constraints)
         : constraints;
       return state.origApplyConstraints.call(this, next);
-@@ -338,56 +414,57 @@
+    };
+    proto.__micMaxTrackPatched = true;
+  }
+
+  function normalizeConstraints(constraints) {
+    if (!constraints) return { audio: true };
+    const next = { ...constraints };
     if (typeof next.audio === 'object') next.audio = rawMicAudioConstraints(next.audio);
     return next;
   }
@@ -444,7 +461,12 @@
       const meta = state.processedMeta.get(liveTrack);
       if (meta) state.processedMeta.set(clone, meta);
       return clone;
-@@ -400,86 +477,115 @@
+    } catch (_) {
+      return liveTrack;
+    }
+  }
+
+  function processAudioTrack(track, forSender = false) {
     if (!track || track.kind !== 'audio') return track;
     if (state.processedTracks.has(track)) {
       const nextTrack = track.readyState === 'ended' ? rebuildProcessedTrack(track) : track;
@@ -470,7 +492,6 @@
     return forSender ? cloneForSender(processedTrack) : processedTrack;
   }
 
-
   function enhanceAudioSdp(sdp) {
     if (typeof sdp !== 'string' || !sdp.includes('m=audio')) return sdp;
     let next = sdp;
@@ -478,7 +499,7 @@
       const additions = ['maxaveragebitrate=512000', 'stereo=0', 'sprop-stereo=0', 'useinbandfec=1', 'usedtx=0'];
       const merged = params || '';
       const suffix = additions.filter((item) => !new RegExp(`(^|;)\\s*${item.split('=')[0]}=`, 'i').test(merged));
-      return suffix.length ? `${line};${suffix.join(';')}` : line;
+      return suffix.length ? `\( {line}; \){suffix.join(';')}` : line;
     });
     next = next.replace(/b=AS:\d+/g, 'b=AS:512').replace(/b=TIAS:\d+/g, 'b=TIAS:512000');
     if (!/b=AS:512/.test(next)) next = next.replace(/(m=audio[^\r\n]*(?:\r?\n)c=IN[^\r\n]*)/, '$1\r\nb=AS:512');
@@ -560,7 +581,9 @@
 
   async function replaceSenderTrack(sender, track) {
     if (!sender || typeof sender.replaceTrack !== 'function') return null;
-@@ -500,143 +606,222 @@
+    try {
+      const replacement = track?.readyState === 'ended' ? await reacquireProcessedTrackForSender() : processAudioTrack(track, true);
+      if (!replacement) return null;
       await sender.replaceTrack(replacement);
       tuneAudioSender(sender);
       rememberSender(sender, replacement);
@@ -706,6 +729,7 @@
           return transceiver;
         };
       }
+
       const originalCreateOffer = PC.prototype.createOffer;
       if (typeof originalCreateOffer === 'function') {
         PC.prototype.createOffer = function createOffer(...args) {
@@ -783,7 +807,21 @@
 
   async function wrapped(orig, constraints, ctx) {
     if (wantsAudio(constraints)) state.lastAudioConstraints = constraints || { audio: true };
-@@ -660,28 +845,28 @@
+    if (!cfg().enabled) return orig.call(ctx, constraints);
+    return getStreamWithFallback(orig, constraints, ctx).then((stream) => {
+      if (!stream || !stream.getAudioTracks().length) return stream;
+      return build(stream, state.config);
+    });
+  }
+
+  // Main hooks
+  if (navigator.mediaDevices?.getUserMedia) {
+    state.origMD = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia = function getUserMedia(constraints) {
+      return wrapped(state.origMD, constraints, navigator.mediaDevices);
+    };
+  }
+
   if (navigator.getUserMedia) {
     state.origLegacy = navigator.getUserMedia.bind(navigator);
     navigator.getUserMedia = (constraints, ok, fail) => {
