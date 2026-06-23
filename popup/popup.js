@@ -1,5 +1,6 @@
 const EXT = globalThis.browser ?? globalThis.chrome;
 const HAS_PROMISE_API = typeof globalThis.browser !== 'undefined' && EXT === globalThis.browser;
+
 const DEFAULTS = {
   profileVersion: 7,
   enabled: true,
@@ -25,6 +26,7 @@ const DEFAULTS = {
   keepAliveGain: 0.0012,
   senderRefreshMs: 250
 };
+
 const PRESETS = {
   royal: {
     profileVersion: 7,
@@ -77,6 +79,7 @@ const PRESETS = {
     senderRefreshMs: 250
   }
 };
+
 const ids = Object.keys(DEFAULTS).filter((id) => id !== 'profileVersion');
 
 function storageGet(key) {
@@ -135,12 +138,16 @@ function updateLabels() {
     const el = document.getElementById(id);
     const label = document.getElementById(`${id}Val`);
     if (!label || el?.type === 'checkbox') return;
-    label.textContent = id === 'gainDb' ? `${numberText(el.value)} dB / ${multiplierFromGainDb(el.value)}x` : numberText(el.value);
+    label.textContent = id === 'gainDb' 
+      ? `${numberText(el.value)} dB / ${multiplierFromGainDb(el.value)}x` 
+      : numberText(el.value);
   });
 }
 
 function presetMatches(config, preset) {
-  return Object.entries(preset).every(([key, value]) => Number(config[key]) === Number(value) || config[key] === value);
+  return Object.entries(preset).every(([key, value]) => 
+    Number(config[key]) === Number(value) || config[key] === value
+  );
 }
 
 function activePreset(config) {
