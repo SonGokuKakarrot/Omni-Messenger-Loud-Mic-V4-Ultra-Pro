@@ -3,6 +3,7 @@
   if (!EXT?.runtime?.getURL) return;
 
   const injectorUrl = EXT.runtime.getURL('core/injector.js');
+  let retryTimer = null;
 
   function sendHeartbeat() {
     try {
@@ -12,15 +13,11 @@
   }
 
   function inject() {
-    if (window.__micMaxLoaderBusy) return;
-    window.__micMaxLoaderBusy = true;
-
-    const alreadyInjected = document.documentElement?.dataset?.micMaxLoaderInjected === '1';
-    if (alreadyInjected && window.__micMaxInjectorReady) {
-      window.__micMaxLoaderBusy = false;
+    if (window.__micMaxLoaderBusy || window.__micMaxInjectorReady) {
       sendHeartbeat();
       return;
     }
+    window.__micMaxLoaderBusy = true;
 
     const script = document.createElement('script');
     script.src = injectorUrl;
@@ -30,6 +27,7 @@
       document.documentElement.dataset.micMaxLoaderInjected = '1';
       window.__micMaxLoaderBusy = false;
       sendHeartbeat();
+      if (retryTimer) clearInterval(retryTimer);
       script.remove();
     };
     script.onerror = () => {
@@ -40,13 +38,12 @@
   }
 
   inject();
-
-  const observer = new MutationObserver(() => {
-    if (!window.__micMaxInjectorReady) inject();
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-
-  setInterval(() => {
-    if (!window.__micMaxInjectorReady) inject();
-  }, 2500);
+  retryTimer = setInterval(() => {
+    if (window.__micMaxInjectorReady) {
+      clearInterval(retryTimer);
+      sendHeartbeat();
+      return;
+    }
+    inject();
+  }, 5000);
 })();
