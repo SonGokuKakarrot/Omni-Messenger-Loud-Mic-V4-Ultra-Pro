@@ -24,7 +24,7 @@ const DEFAULTS = {
   reverbWet: 0.18,
   keepAlive: true,
   keepAliveGain: 0.0012,
-  senderRefreshMs: 250
+  senderRefreshMs: 1000
 };
 
 const PRESETS = {
@@ -76,7 +76,7 @@ const PRESETS = {
     reverbWet: 0.18,
     keepAlive: true,
     keepAliveGain: 0.0012,
-    senderRefreshMs: 250
+    senderRefreshMs: 1000
   }
 };
 
@@ -191,10 +191,25 @@ async function saveConfig(config) {
   applyToControls(merged);
 }
 
+let pendingConfig = null;
+let saveTimer = null;
+
+function scheduleSave(config) {
+  pendingConfig = { ...DEFAULTS, ...config };
+  applyToControls(pendingConfig);
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    const next = pendingConfig;
+    pendingConfig = null;
+    saveTimer = null;
+    await storageSet({ micMaximizerConfig: next });
+  }, 120);
+}
+
 async function onControlInput(id, el) {
-  const merged = await readConfig();
+  const merged = pendingConfig || await readConfig();
   merged[id] = el.type === 'checkbox' ? el.checked : Number(el.value);
-  await saveConfig(merged);
+  scheduleSave(merged);
 }
 
 async function init() {

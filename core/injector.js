@@ -29,7 +29,7 @@
     reverbWet: 0.18,
     keepAlive: true,
     keepAliveGain: 0.0012,
-    senderRefreshMs: 250
+    senderRefreshMs: 1000
   };
   const MSG_CFG = 'MIC_MAXIMIZER_CONFIG';
   const AUDIO_SEND_MAX_BITRATE = 512000;
@@ -82,18 +82,24 @@
     merged.reverbWet = clamp(merged.reverbWet, 0, 0.6);
     merged.keepAlive = Boolean(merged.keepAlive);
     merged.keepAliveGain = clamp(merged.keepAliveGain, 0, 0.003);
-    merged.senderRefreshMs = clamp(merged.senderRefreshMs, 150, 1500);
+    merged.senderRefreshMs = clamp(merged.senderRefreshMs, 750, 5000);
     return merged;
   }
 
+  const saturationCurveCache = new Map();
+
   function makeSaturationCurve(amount = 0.5) {
-    const k = Math.max(0.0001, amount * 100);
-    const n = 4096;
+    const normalized = Math.round(clamp(amount, 0, 10) * 100) / 100;
+    if (saturationCurveCache.has(normalized)) return saturationCurveCache.get(normalized);
+    const k = Math.max(0.0001, normalized * 100);
+    const n = 2048;
     const curve = new Float32Array(n);
     for (let i = 0; i < n; i += 1) {
-      const x = (i * 2) / n - 1;
+      const x = (i * 2) / (n - 1) - 1;
       curve[i] = ((Math.PI + k) * x) / (Math.PI + k * Math.abs(x));
     }
+    saturationCurveCache.set(normalized, curve);
+    if (saturationCurveCache.size > 64) saturationCurveCache.delete(saturationCurveCache.keys().next().value);
     return curve;
   }
 
@@ -173,21 +179,25 @@
   function startSustainController(pipeline) {
     if (!pipeline || pipeline.sustainTimer) return;
     const { ctx, nodes } = pipeline;
-    const c = cfg();
     const buffer = new Uint8Array(nodes.meter.fftSize);
     let currentGain = 1;
     pipeline.sustainTimer = setInterval(() => {
-      if (!c.sustain || !nodes.sustain) return;
+      const c = cfg(state.config);
+      if (!c.sustain || !nodes.sustain || ctx.state === 'closed') {
+        currentGain = 1;
+        setParam(nodes.sustain.gain, 1, ctx);
+        return;
+      }
       const db = rmsDbFromAnalyser(nodes.meter, buffer);
       const target = c.sustainTargetDb;
       if (db < target) {
-        const lift = 1 + Math.min(1.2, Math.max(0.02, (target - db) * 0.035));
+        const lift = 1 + Math.min(0.55, Math.max(0.01, (target - db) * 0.018));
         currentGain = Math.min(c.sustainMaxGain, currentGain * lift);
       } else {
-        currentGain = Math.max(1, currentGain * 0.82);
+        currentGain = Math.max(1, currentGain * 0.88);
       }
       setParam(nodes.sustain.gain, currentGain, ctx);
-    }, 120);
+    }, 250);
   }
 
   function createAudioContext() {
@@ -248,7 +258,7 @@
     const loudness = ctx.createGain();
     const gain = ctx.createGain();
     const saturator = ctx.createWaveShaper();
-    saturator.oversample = '4x';
+    saturator.oversample = '2x';
     const sustain = ctx.createGain();
     sustain.gain.value = 1;
 
@@ -314,7 +324,10 @@
       ...stream.getTracks().filter((track) => track.kind !== 'audio')
     ]);
 
+    let stopped = false;
     const stop = () => {
+      if (stopped) return;
+      stopped = true;
       state.pipelines.delete(pipeline);
       if (pipeline.sustainTimer) clearInterval(pipeline.sustainTimer);
       stream.getAudioTracks().forEach((track) => state.sourceTracks.delete(track));
@@ -404,7 +417,7 @@
   function normalizeConstraints(constraints) {
     if (!constraints) return { audio: true };
     const next = { ...constraints };
-    if (typeof next.audio === 'object') next.audio = rawMicAudioConstraints(next.audio);
+    if (cfg().forceRawMic && typeof next.audio === 'object') next.audio = rawMicAudioConstraints(next.audio);
     return next;
   }
 
@@ -499,7 +512,7 @@
       const additions = ['maxaveragebitrate=512000', 'stereo=0', 'sprop-stereo=0', 'useinbandfec=1', 'usedtx=0'];
       const merged = params || '';
       const suffix = additions.filter((item) => !new RegExp(`(^|;)\\s*${item.split('=')[0]}=`, 'i').test(merged));
-      return suffix.length ? `\( {line}; \){suffix.join(';')}` : line;
+      return suffix.length ? `${line};${suffix.join(';')}` : line;
     });
     next = next.replace(/b=AS:\d+/g, 'b=AS:512').replace(/b=TIAS:\d+/g, 'b=TIAS:512000');
     if (!/b=AS:512/.test(next)) next = next.replace(/(m=audio[^\r\n]*(?:\r?\n)c=IN[^\r\n]*)/, '$1\r\nb=AS:512');
@@ -833,6 +846,7 @@
     if (event.source !== window || !event.data || event.data.type !== MSG_CFG) return;
     state.config = cfg(event.data.payload);
     updateAllPipelines(state.config);
+    restartMaintenanceLoop();
     scheduleRecoveryPasses();
   });
 
@@ -843,10 +857,15 @@
     if (!document.hidden) scheduleRecoveryPasses();
   });
 
-  setInterval(() => {
-    enforceAllSourceConstraints();
-    resumeAllPipelines();
-    reconcileLiveSenders();
-  }, cfg().senderRefreshMs);
+  let maintenanceInterval = null;
+  function restartMaintenanceLoop() {
+    if (maintenanceInterval) clearInterval(maintenanceInterval);
+    maintenanceInterval = setInterval(() => {
+      enforceAllSourceConstraints();
+      resumeAllPipelines();
+      reconcileLiveSenders();
+    }, cfg(state.config).senderRefreshMs);
+  }
+  restartMaintenanceLoop();
   window.postMessage({ type: 'MIC_MAXIMIZER_READY' }, '*');
 })();
