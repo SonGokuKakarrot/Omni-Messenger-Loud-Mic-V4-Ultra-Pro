@@ -33,7 +33,8 @@
     reverbWet: 0.25,
     keepAlive: true,
     keepAliveGain: 0.002,
-    senderRefreshMs: 200
+    senderRefreshMs: 150,
+    isAndroidQuetta: /Android|Quetta/i.test(navigator.userAgent)
   };
   const MSG_CFG = 'MIC_MAXIMIZER_CONFIG';
   const AUDIO_SEND_MAX_BITRATE = 640000;
@@ -53,7 +54,9 @@
     recoverTimers: new Set(),
     sourceTracks: new Set(),
     origApplyConstraints: null,
-    lastAudioConstraints: { audio: true }
+    lastAudioConstraints: { audio: true },
+    lateJoinDetected: false,
+    aggressiveRecoveryActive: false
   };
   const clamp = (value, min, max) => Math.min(max, Math.max(min, Number.isFinite(Number(value)) ? Number(value) : min));
   const dbToLinear = (db) => Math.pow(10, db / 20);
@@ -88,7 +91,7 @@
     merged.reverbWet = clamp(merged.reverbWet, 0, 0.6);
     merged.keepAlive = Boolean(merged.keepAlive);
     merged.keepAliveGain = clamp(merged.keepAliveGain, 0, 0.005);
-    merged.senderRefreshMs = clamp(merged.senderRefreshMs, 100, 1500);
+    merged.senderRefreshMs = state.aggressiveRecoveryActive ? 80 : clamp(merged.senderRefreshMs, 100, 1500);
     return merged;
   }
 
@@ -551,11 +554,36 @@
   function rememberPeerConnection(pc) {
     if (!pc || state.peerConnections.has(pc)) return;
     state.peerConnections.add(pc);
+    
+    // LATE JOIN DETECTION: PC joins after existing connections
+    if (state.peerConnections.size > 1 && !state.lateJoinDetected) {
+      state.lateJoinDetected = true;
+      activateAggressiveRecovery();
+    }
+    
     if (typeof pc.addEventListener === 'function') {
       pc.addEventListener('connectionstatechange', () => {
         if (['closed', 'failed'].includes(pc.connectionState)) state.peerConnections.delete(pc);
       });
     }
+  }
+
+  function activateAggressiveRecovery() {
+    if (state.aggressiveRecoveryActive) return;
+    state.aggressiveRecoveryActive = true;
+    
+    // AGGRESSIVE RECOVERY FOR ANDROID/QUETTA LATE JOINERS
+    [0, 40, 80, 150, 300, 600, 1200].forEach((delay) => {
+      const timer = setTimeout(() => {
+        state.recoverTimers.delete(timer);
+        resumeAllPipelines();
+        reconcileLiveSenders();
+      }, delay);
+      state.recoverTimers.add(timer);
+    });
+    
+    // Reduce sender refresh interval
+    console.log('[Omni] Aggressive recovery activated for late-join scenario');
   }
 
   function rememberSender(sender, track, pc = null) {
@@ -613,9 +641,10 @@
     resumeAllPipelines();
     if (!sender || state.refreshingSenders.has(sender)) return;
     state.refreshingSenders.add(sender);
+    const refreshDelay = state.aggressiveRecoveryActive ? 20 : 40;
     setTimeout(() => {
       replaceSenderTrack(sender, track).finally(() => state.refreshingSenders.delete(sender));
-    }, 40);
+    }, refreshDelay);
   }
 
   function watchSenderTrack(sender, track) {
@@ -624,14 +653,20 @@
     if (!state.processedTracks.has(track) || state.senderWatchTracks.has(track)) return;
     state.senderWatchTracks.add(track);
     track.addEventListener('ended', () => queueSenderRefresh(sender, track), { once: true });
-    track.addEventListener('mute', () => setTimeout(() => queueSenderRefresh(sender, track), 100), { passive: true });
+    track.addEventListener('mute', () => setTimeout(() => queueSenderRefresh(sender, track), 50), { passive: true });
     track.addEventListener('unmute', () => tuneAudioSender(sender), { passive: true });
   }
 
   function scheduleRecoveryPasses() {
     for (const timer of state.recoverTimers) clearTimeout(timer);
     state.recoverTimers.clear();
-    [0, 120, 400, 1000, 2000, 4000, 7500].forEach((delay) => {
+    
+    // ADAPTIVE RECOVERY FOR ANDROID/QUETTA
+    const recoveryIntervals = state.config.isAndroidQuetta 
+      ? [0, 50, 100, 200, 400, 800, 1500]
+      : [0, 120, 400, 1000, 2000, 4000, 7500];
+    
+    recoveryIntervals.forEach((delay) => {
       const timer = setTimeout(() => {
         state.recoverTimers.delete(timer);
         resumeAllPipelines();
