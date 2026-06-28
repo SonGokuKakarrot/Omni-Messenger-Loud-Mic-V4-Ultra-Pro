@@ -1,6 +1,10 @@
-# Omni Messenger And Insta Lord V4 Pro
+# Omni Messenger And Insta Lord V4 ULTRA
 
 **Developed by Omni**
+
+## 🔊 Now with 250000x ULTRA Profile for Android Quetta Browser!
+
+This is the **loudest messenger/Instagram browser call extension ever made**, with extreme real-time DSP control optimized for Android Quetta.
 
 ## Supported call pages
 
@@ -11,48 +15,166 @@
 - `https://instagram.com/*`
 - `https://*.instagram.com/*`
 
-# Here’s the simple direction for MAXIMUM loudness:
-**✅ Increase these options (move slider to the right):**
+---
 
-Loudness Trim
+## 🚀 PRESETS
 
-Boost ceiling
+### 1. **Royal Clear** (Balanced)
+Clean, loud calls with minimal distortion. Good for all-day calls.
+- Gain: 24 dB (16x)
+- Loudness: 4x
+- Boost ceiling: 2000x
+- Safe, professional-grade loudness
 
-Saturation Drive
+### 2. **Lord V4** (200000x — Previous Max)
+The original extreme profile. Very aggressive.
+- Gain: 106 dB (200000x multiplier)
+- Compressor Ratio: 20
+- Limiter Ceiling: -0.1 dB
+- Best for maximum volume with some distortion tolerance
 
-Compressor Ratio
+### 3. **🔊 Ultra Quetta** (250000x — NEW!)
+**Maximum loudness for Android Quetta browser.** Breaks all safety limits.
+- **Gain: 110 dB (250000x!)**
+- Saturation Intensity: 2.0x (hyper-aggressive curve)
+- 5kHz presence peak: +28 dB (voice intelligibility)
+- Compressor attack: 0.00005s (instant response)
+- Limiter ceiling: +0.5 dB (headroom bypass)
+- Sustain Max Gain: 160 (extreme dynamic hold)
+- **For Quetta browser + raw WebRTC only**
 
-Sustain Max Gain
+---
 
-Presence EQ
+## 🎛️ MANUAL LOUDNESS GUIDE
 
-Treble EQ
+### ✅ Increase these (move slider RIGHT):
 
-Gain dB / multiplier (if not already maxed)
+1. **Gain dB** (0–125 dB range) — Primary volume boost
+2. **Loudness Trim** (0.5–250000x) — Multiplicative gain
+3. **Boost ceiling** (1–250000x) — Loudness hard cap
+4. **Saturation Drive** (0–15) — Harmonic distortion intensity
+5. **Saturation Intensity** (0.5–5.0) — Curve aggressiveness
+6. **Compressor Ratio** (1–20) — Compression ratio
+7. **Sustain Max Gain** (1–200) — Anti-ducking hold
+8. **Presence EQ** (-60 to +60 dB) — Upper midrange (3200 Hz)
+9. **5kHz Peak** (-60 to +60 dB) — Voice presence (Android clarity)
+10. **Treble EQ** (-60 to +60 dB) — High frequency boost
+11. **Bass EQ** (-60 to +60 dB) — Low end (optional)
 
+### ⬇️ Decrease these (move slider LEFT / more negative):
 
-**⬇️ Decrease these options (move slider to the left):**
+1. **Compressor Threshold** (-100 to 0 dB) — Make **more negative** (lower threshold = more aggressive compression)
+2. **Sustain Target dB** (-24 to +12 dB) — Lower if you need stronger anti-ducking
 
-Compressor Threshold dB (make it more negative)
+### ☑️ Keep both checkboxes ON:
 
-Sustain Target dB (make it a bit lower if needed)
+- ✅ **Anti-duck sustain lock** — Prevents volume dips during speech
+- ✅ **Raw mic constraint lock** — Disables all browser noise suppression
+- ✅ **Reverb keep-alive layer** — Prevents audio dropout
+- ✅ **Mic activity keep-alive** — Keeps pipeline alive during silence
 
-**Keep both checkboxes ON ☑️:**
+---
 
-Anti-duck sustain lock
+## 🎯 BEST ORDER TO ADJUST (Maximum Loudness)
 
-Raw mic constraint lock
+1. **Start with a preset** (Royal Clear → Lord V4 → Ultra Quetta)
+2. **Increase Gain dB first** (biggest impact on volume)
+3. **Lower Compressor Threshold to -70 or -80 dB** (activates aggressive compression)
+4. **Raise Compressor Ratio to 20** (maximum compression)
+5. **Increase Saturation Drive to 2.0–3.0** (adds harmonic punch)
+6. **Boost Presence EQ to +25 to +32 dB** (voice clarity)
+7. **Boost 5kHz Peak to +20 to +28 dB** (Android clarity on calls)
+8. **Adjust Sustain Max Gain to 160** (smooth anti-ducking)
+9. **Fine-tune Limiter Ceiling if distorting** (reduce from +0.5 to -1.0 dB)
 
-**Best order to adjust:**
+---
 
-First increase Loudness Trim + Boost ceiling (biggest impact)
-Increase Sustain Max Gain
+## ⚠️ DISTORTION / CLIPPING FIX
 
-Lower Compressor Threshold + raise Compressor Ratio
-Raise Limiter Ceiling
+If you hear crackling, popping, or distortion:
 
-Add Saturation Drive + Presence/Treble
+1. **Lower Saturation Drive** (2.0 → 1.5 → 1.0)
+2. **Lower Saturation Intensity** (2.0 → 1.5)
+3. **Lower Gain dB** (110 → 100)
+4. **Reduce Limiter Ceiling** (0.5 → -0.5 → -2.0)
+5. **Lower Sustain Max Gain** (160 → 100)
 
-This combination gives the loudest result when all work together.
+If still distorted, switch to **Royal Clear** preset (safe mode).
 
-Test after changing and lower Saturation or Limiter Ceiling if it starts distorting too much
+---
+
+## 🏗️ ARCHITECTURE
+
+- **`core/injector.js`** — DSP pipeline + WebRTC hooks (32KB)
+  - Multi-stage audio processing (high-pass → dual compressors → EQ → saturation → sustain → limiter)
+  - Real-time track refresh & sender optimization
+  - Raw microphone constraint enforcement
+  
+- **`content/loader.js`** — Extension injector (1.5KB)
+  - Loads core engine at document start
+  
+- **`content/service.js`** — Config sync (2.7KB)
+  - Storage listener + periodic config sync to injector
+  
+- **`popup/popup.html`** — UI (5.1KB)
+  - 20+ real-time sliders
+  - 3 preset buttons (Royal Clear, Lord V4, Ultra Quetta)
+  
+- **`popup/popup.js`** — Control logic (6.4KB)
+  - Storage persistence
+  - Preset switching
+  
+- **`popup/popup.css`** — Styling (7.1KB)
+  - Theme system (royal/lord/ultraQuetta)
+  - Dark mode optimized
+
+---
+
+## 📱 ANDROID QUETTA SETUP
+
+1. **Download extension ZIP** from GitHub
+2. **Unpack to a local folder** (e.g., `/sdcard/Downloads/omni-v4`)
+3. **Enable Developer Mode** on Quetta Browser
+4. **Load Unpacked Extension** → select unpacked folder
+5. **Open Facebook/Messenger/Instagram Web** in Quetta
+6. **Reload the tab** (Ctrl+R or pull refresh)
+7. **Join a call** — extension activates automatically
+8. **Click extension icon** → select preset or adjust sliders
+9. **Test with friend** — you should sound 250000x louder
+
+---
+
+## 🔧 TECHNICAL SPECS
+
+| Parameter | Min | Default | Max | Unit |
+|-----------|-----|---------|-----|------|
+| Gain | 0 | 110.0 | 125 | dB |
+| Loudness Trim | 0.5 | 1.2 | 250000 | x |
+| Boost Ceiling | 1 | 250000 | 250000 | x |
+| Saturation Drive | 0 | 2.8 | 15 | — |
+| Saturation Intensity | 0.5 | 2.0 | 5.0 | — |
+| Compressor Threshold | -100 | -70 | 0 | dB |
+| Compressor Ratio | 1 | 20 | 20 | — |
+| Compressor Attack | 0.00001 | 0.00005 | 1 | s |
+| Presence EQ (3.2k) | -60 | +32 | +60 | dB |
+| 5kHz Peak | -60 | +28 | +60 | dB |
+| Limiter Ceiling | -24 | +0.5 | +2 | dB |
+| Sustain Max Gain | 1 | 160 | 200 | — |
+| Audio Bitrate (SDP) | — | 640 kbps | — | — |
+| Sample Rate | — | 48 kHz | — | — |
+
+---
+
+## 📝 NOTES
+
+- **No remote calls or data transmission** — 100% local processing
+- **Android Quetta optimized** — WebRTC hooks work best on Quetta/Chromium
+- **Extreme settings = extreme volume + potential distortion** — use Royal Clear if overwhelmed
+- **Best on calls with good mic hardware** — cheap mics will sound cheap, just louder
+- **Profile version: 8** — auto-upgrades from v7 with new 250000x defaults
+
+---
+
+## ✨ Credits
+
+Developed by **Omni**. For personal use on Messenger, Instagram, and Facebook calls.
