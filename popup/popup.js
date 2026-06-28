@@ -2,45 +2,55 @@ const EXT = globalThis.browser ?? globalThis.chrome;
 const HAS_PROMISE_API = typeof globalThis.browser !== 'undefined' && EXT === globalThis.browser;
 
 const DEFAULTS = {
-  profileVersion: 7,
+  profileVersion: 8,
   enabled: true,
-  gainDb: 106.0206,
-  loudness: 1.0,
-  maxBoost: 200000,
-  drive: 1.5,
-  thresholdDb: -60,
+  gainDb: 110.0,
+  loudness: 1.2,
+  maxBoost: 250000,
+  drive: 2.8,
+  saturationCurveIntensity: 2.0,
+  thresholdDb: -70,
   ratio: 20,
-  limiterDb: -0.1,
-  presenceDb: 24,
-  lowShelfDb: 14,
-  highShelfDb: 18,
+  limiterDb: 0.5,
+  presenceDb: 32,
+  lowShelfDb: 18,
+  highShelfDb: 22,
+  presencePeakDb: 28,
+  presencePeakFreq: 5000,
+  presencePeakQ: 2.2,
   sustain: true,
-  sustainTargetDb: 5,
-  sustainMaxGain: 120,
+  sustainTargetDb: 8,
+  sustainMaxGain: 160,
   forceRawMic: true,
   reverbEnabled: true,
-  reverbDelay: 0.045,
-  reverbFeedback: 0.35,
-  reverbWet: 0.18,
+  reverbDelay: 0.055,
+  reverbFeedback: 0.45,
+  reverbWet: 0.25,
   keepAlive: true,
-  keepAliveGain: 0.0012,
-  senderRefreshMs: 250
+  keepAliveGain: 0.002,
+  attack: 0.00005,
+  release: 0.025,
+  senderRefreshMs: 200
 };
 
 const PRESETS = {
   royal: {
-    profileVersion: 7,
+    profileVersion: 8,
     enabled: true,
     gainDb: 24,
     loudness: 4,
     maxBoost: 2000,
     drive: 0.28,
+    saturationCurveIntensity: 1.0,
     thresholdDb: -38,
     ratio: 12,
     limiterDb: -2,
     presenceDb: 8,
     lowShelfDb: 4,
     highShelfDb: 6,
+    presencePeakDb: 4,
+    presencePeakFreq: 5000,
+    presencePeakQ: 1.5,
     sustain: true,
     sustainTargetDb: -8,
     sustainMaxGain: 12,
@@ -51,21 +61,27 @@ const PRESETS = {
     reverbWet: 0.08,
     keepAlive: true,
     keepAliveGain: 0.0002,
+    attack: 0.0001,
+    release: 0.03,
     senderRefreshMs: 750
   },
   lord: {
-    profileVersion: 7,
+    profileVersion: 8,
     enabled: true,
     gainDb: 106.0206,
     loudness: 1,
     maxBoost: 200000,
     drive: 1.5,
+    saturationCurveIntensity: 1.0,
     thresholdDb: -60,
     ratio: 20,
     limiterDb: -0.1,
     presenceDb: 24,
     lowShelfDb: 14,
     highShelfDb: 18,
+    presencePeakDb: 18,
+    presencePeakFreq: 5000,
+    presencePeakQ: 1.8,
     sustain: true,
     sustainTargetDb: 5,
     sustainMaxGain: 120,
@@ -76,7 +92,40 @@ const PRESETS = {
     reverbWet: 0.18,
     keepAlive: true,
     keepAliveGain: 0.0012,
+    attack: 0.00005,
+    release: 0.03,
     senderRefreshMs: 250
+  },
+  ultraQuetta: {
+    profileVersion: 8,
+    enabled: true,
+    gainDb: 110.0,
+    loudness: 1.2,
+    maxBoost: 250000,
+    drive: 2.8,
+    saturationCurveIntensity: 2.0,
+    thresholdDb: -70,
+    ratio: 20,
+    limiterDb: 0.5,
+    presenceDb: 32,
+    lowShelfDb: 18,
+    highShelfDb: 22,
+    presencePeakDb: 28,
+    presencePeakFreq: 5000,
+    presencePeakQ: 2.2,
+    sustain: true,
+    sustainTargetDb: 8,
+    sustainMaxGain: 160,
+    forceRawMic: true,
+    reverbEnabled: true,
+    reverbDelay: 0.055,
+    reverbFeedback: 0.45,
+    reverbWet: 0.25,
+    keepAlive: true,
+    keepAliveGain: 0.002,
+    attack: 0.00005,
+    release: 0.025,
+    senderRefreshMs: 200
   }
 };
 
@@ -153,6 +202,7 @@ function presetMatches(config, preset) {
 function activePreset(config) {
   if (presetMatches(config, PRESETS.royal)) return 'royal';
   if (presetMatches(config, PRESETS.lord)) return 'lord';
+  if (presetMatches(config, PRESETS.ultraQuetta)) return 'ultraQuetta';
   return 'custom';
 }
 
@@ -161,10 +211,13 @@ function updatePresetState(config) {
   document.body.dataset.theme = active;
   const royalButton = document.getElementById('royalPreset');
   const lordButton = document.getElementById('lordPreset');
+  const ultraButton = document.getElementById('ultraQuettaPreset');
   royalButton?.classList.toggle('active', active === 'royal');
   royalButton?.setAttribute('aria-pressed', String(active === 'royal'));
   lordButton?.classList.toggle('active', active === 'lord');
   lordButton?.setAttribute('aria-pressed', String(active === 'lord'));
+  ultraButton?.classList.toggle('active', active === 'ultraQuetta');
+  ultraButton?.setAttribute('aria-pressed', String(active === 'ultraQuetta'));
 }
 
 function applyToControls(config) {
@@ -207,6 +260,7 @@ async function init() {
   });
   document.getElementById('royalPreset')?.addEventListener('click', () => saveConfig(PRESETS.royal));
   document.getElementById('lordPreset')?.addEventListener('click', () => saveConfig(PRESETS.lord));
+  document.getElementById('ultraQuettaPreset')?.addEventListener('click', () => saveConfig(PRESETS.ultraQuetta));
 }
 
 async function refreshHookStatus() {
@@ -216,14 +270,14 @@ async function refreshHookStatus() {
     const status = await sendMessage({ type: 'MICMAX_STATUS_REQUEST' });
     const ageMs = status?.lastHeartbeat ? Date.now() - status.lastHeartbeat : Infinity;
     if (status?.ok && ageMs < 12000) {
-      el.textContent = 'Hook status: ACTIVE on Facebook/Messenger/Instagram';
+      el.textContent = '✅ Hook status: ACTIVE on Facebook/Messenger/Instagram';
       el.className = 'status ok';
     } else {
-      el.textContent = 'Hook status: waiting — open or reload Facebook/Messenger/Instagram Web';
+      el.textContent = '⏳ Hook status: waiting — open or reload Facebook/Messenger/Instagram Web';
       el.className = 'status warn';
     }
   } catch (_) {
-    el.textContent = 'Hook status: unavailable';
+    el.textContent = '❌ Hook status: unavailable';
     el.className = 'status warn';
   }
 }
