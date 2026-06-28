@@ -2,37 +2,41 @@
   if (window.__micMaxInjectorReady) return;
   window.__micMaxInjectorReady = true;
 
-  // Omni Messenger Lord V4 extreme 200000x profile, with clamps to keep controls recoverable.
+  // Omni Messenger Lord V4 ULTRA — 250000x Quetta extreme profile
   const DEFAULTS = {
-    profileVersion: 7,
+    profileVersion: 8,
     enabled: true,
-    gainDb: 106.0206,
-    thresholdDb: -60,
-    knee: 40,
+    gainDb: 110.0,
+    thresholdDb: -70,
+    knee: 20,
     ratio: 20,
-    attack: 0.0001,
-    release: 0.03,
-    lowShelfDb: 14,
-    presenceDb: 24,
-    highShelfDb: 18,
-    limiterDb: -0.1,
-    drive: 1.5,
-    loudness: 1.0,
-    maxBoost: 200000,
+    attack: 0.00005,
+    release: 0.025,
+    lowShelfDb: 18,
+    presenceDb: 32,
+    highShelfDb: 22,
+    presencePeakFreq: 5000,
+    presencePeakQ: 2.2,
+    presencePeakDb: 28,
+    limiterDb: 0.5,
+    drive: 2.8,
+    loudness: 1.2,
+    maxBoost: 250000,
+    saturationCurveIntensity: 2.0,
     sustain: true,
-    sustainTargetDb: 5,
-    sustainMaxGain: 120,
+    sustainTargetDb: 8,
+    sustainMaxGain: 160,
     forceRawMic: true,
     reverbEnabled: true,
-    reverbDelay: 0.045,
-    reverbFeedback: 0.35,
-    reverbWet: 0.18,
+    reverbDelay: 0.055,
+    reverbFeedback: 0.45,
+    reverbWet: 0.25,
     keepAlive: true,
-    keepAliveGain: 0.0012,
-    senderRefreshMs: 250
+    keepAliveGain: 0.002,
+    senderRefreshMs: 200
   };
   const MSG_CFG = 'MIC_MAXIMIZER_CONFIG';
-  const AUDIO_SEND_MAX_BITRATE = 512000;
+  const AUDIO_SEND_MAX_BITRATE = 640000;
   const state = {
     config: { ...DEFAULTS },
     origMD: null,
@@ -57,37 +61,39 @@
   function cfg(input = state.config) {
     const merged = { ...DEFAULTS, ...(input || {}) };
     merged.enabled = Boolean(merged.enabled);
-    merged.maxBoost = clamp(merged.maxBoost, 1, 200000);
+    merged.maxBoost = clamp(merged.maxBoost, 1, 250000);
     merged.loudness = clamp(merged.loudness, 0.5, merged.maxBoost);
-    merged.gainDb = clamp(merged.gainDb, 0, 120);
-    merged.drive = clamp(merged.drive, 0, 10);
+    merged.gainDb = clamp(merged.gainDb, 0, 125);
+    merged.drive = clamp(merged.drive, 0, 15);
+    merged.saturationCurveIntensity = clamp(merged.saturationCurveIntensity, 0.5, 5);
     merged.thresholdDb = clamp(merged.thresholdDb, -100, 0);
     merged.knee = clamp(merged.knee, 0, 40);
-    // DynamicsCompressorNode.ratio has a nominal browser range of [1, 20].
-    // Values above 20 trigger Quetta/Chromium extension errors/warnings at setTargetAtTime.
     merged.ratio = clamp(merged.ratio, 1, 20);
-    merged.attack = clamp(merged.attack, 0.0001, 1);
+    merged.attack = clamp(merged.attack, 0.00001, 1);
     merged.release = clamp(merged.release, 0.01, 1);
     merged.lowShelfDb = clamp(merged.lowShelfDb, -60, 60);
     merged.presenceDb = clamp(merged.presenceDb, -60, 60);
     merged.highShelfDb = clamp(merged.highShelfDb, -60, 60);
-    merged.limiterDb = clamp(merged.limiterDb, -24, 0);
+    merged.presencePeakDb = clamp(merged.presencePeakDb, -60, 60);
+    merged.presencePeakFreq = clamp(merged.presencePeakFreq, 1000, 12000);
+    merged.presencePeakQ = clamp(merged.presencePeakQ, 0.5, 10);
+    merged.limiterDb = clamp(merged.limiterDb, -24, 2);
     merged.sustain = Boolean(merged.sustain);
     merged.sustainTargetDb = clamp(merged.sustainTargetDb, -24, 12);
-    merged.sustainMaxGain = clamp(merged.sustainMaxGain, 1, 160);
+    merged.sustainMaxGain = clamp(merged.sustainMaxGain, 1, 200);
     merged.forceRawMic = Boolean(merged.forceRawMic);
     merged.reverbEnabled = Boolean(merged.reverbEnabled);
     merged.reverbDelay = clamp(merged.reverbDelay, 0.01, 0.35);
     merged.reverbFeedback = clamp(merged.reverbFeedback, 0, 0.75);
     merged.reverbWet = clamp(merged.reverbWet, 0, 0.6);
     merged.keepAlive = Boolean(merged.keepAlive);
-    merged.keepAliveGain = clamp(merged.keepAliveGain, 0, 0.003);
-    merged.senderRefreshMs = clamp(merged.senderRefreshMs, 150, 1500);
+    merged.keepAliveGain = clamp(merged.keepAliveGain, 0, 0.005);
+    merged.senderRefreshMs = clamp(merged.senderRefreshMs, 100, 1500);
     return merged;
   }
 
-  function makeSaturationCurve(amount = 0.5) {
-    const k = Math.max(0.0001, amount * 100);
+  function makeSaturationCurve(amount = 0.5, intensity = 1) {
+    const k = Math.max(0.0001, amount * 100 * intensity);
     const n = 4096;
     const curve = new Float32Array(n);
     for (let i = 0; i < n; i += 1) {
@@ -103,7 +109,7 @@
     const now = ctx?.currentTime || 0;
     try {
       if (typeof param.cancelScheduledValues === 'function') param.cancelScheduledValues(now);
-      if (typeof param.setTargetAtTime === 'function') param.setTargetAtTime(safeValue, now, 0.005);
+      if (typeof param.setTargetAtTime === 'function') param.setTargetAtTime(safeValue, now, 0.003);
       else param.value = safeValue;
     } catch (_) {
       try { param.value = safeValue; } catch (_) {}
@@ -116,6 +122,7 @@
       ...raw,
       lowShelfDb: 0,
       presenceDb: 0,
+      presencePeakDb: 0,
       highShelfDb: 0,
       thresholdDb: -6,
       knee: 0,
@@ -123,11 +130,13 @@
       loudness: 1,
       gainDb: 0,
       drive: 0,
+      saturationCurveIntensity: 0.5,
       limiterDb: -0.5
     };
     const { ctx, nodes } = pipeline;
     setParam(nodes.low.gain, c.lowShelfDb, ctx);
     setParam(nodes.pres.gain, c.presenceDb, ctx);
+    if (nodes.presencePeak) setParam(nodes.presencePeak.gain, c.presencePeakDb, ctx);
     setParam(nodes.high.gain, c.highShelfDb, ctx);
     setParam(nodes.comp1.threshold, c.thresholdDb, ctx);
     setParam(nodes.comp1.knee, c.knee, ctx);
@@ -136,7 +145,7 @@
     setParam(nodes.comp1.release, c.release, ctx);
     setParam(nodes.loudness.gain, c.loudness, ctx);
     setParam(nodes.gain.gain, dbToLinear(c.gainDb), ctx);
-    nodes.saturator.curve = makeSaturationCurve(c.drive);
+    nodes.saturator.curve = makeSaturationCurve(c.drive, c.saturationCurveIntensity);
     if (nodes.reverbDelay) setParam(nodes.reverbDelay.delayTime, c.reverbDelay, ctx);
     if (nodes.reverbFeedback) setParam(nodes.reverbFeedback.gain, c.reverbEnabled ? c.reverbFeedback : 0, ctx);
     if (nodes.reverbWet) setParam(nodes.reverbWet.gain, c.reverbEnabled ? c.reverbWet : 0, ctx);
@@ -181,13 +190,13 @@
       const db = rmsDbFromAnalyser(nodes.meter, buffer);
       const target = c.sustainTargetDb;
       if (db < target) {
-        const lift = 1 + Math.min(1.2, Math.max(0.02, (target - db) * 0.035));
+        const lift = 1 + Math.min(1.5, Math.max(0.03, (target - db) * 0.04));
         currentGain = Math.min(c.sustainMaxGain, currentGain * lift);
       } else {
-        currentGain = Math.max(1, currentGain * 0.82);
+        currentGain = Math.max(1, currentGain * 0.78);
       }
       setParam(nodes.sustain.gain, currentGain, ctx);
-    }, 120);
+    }, 100);
   }
 
   function createAudioContext() {
@@ -205,7 +214,7 @@
     const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < length; i += 1) {
-      data[i] = (Math.random() * 2 - 1) * 0.35;
+      data[i] = (Math.random() * 2 - 1) * 0.4;
     }
     const source = ctx.createBufferSource();
     source.buffer = buffer;
@@ -221,8 +230,8 @@
     const source = ctx.createMediaStreamSource(stream);
     const hp = ctx.createBiquadFilter();
     hp.type = 'highpass';
-    hp.frequency.value = 75;
-    hp.Q.value = 0.7;
+    hp.frequency.value = 60;
+    hp.Q.value = 0.8;
 
     const low = ctx.createBiquadFilter();
     low.type = 'lowshelf';
@@ -233,17 +242,22 @@
     pres.frequency.value = 3200;
     pres.Q.value = 1.5;
 
+    const presencePeak = ctx.createBiquadFilter();
+    presencePeak.type = 'peaking';
+    presencePeak.frequency.value = 5000;
+    presencePeak.Q.value = 2.2;
+
     const high = ctx.createBiquadFilter();
     high.type = 'highshelf';
     high.frequency.value = 6000;
 
     const comp1 = ctx.createDynamicsCompressor();
     const comp2 = ctx.createDynamicsCompressor();
-    comp2.threshold.value = -10;
-    comp2.knee.value = 5;
-    comp2.ratio.value = 12;
-    comp2.attack.value = 0.001;
-    comp2.release.value = 0.05;
+    comp2.threshold.value = -8;
+    comp2.knee.value = 4;
+    comp2.ratio.value = 14;
+    comp2.attack.value = 0.0005;
+    comp2.release.value = 0.04;
 
     const loudness = ctx.createGain();
     const gain = ctx.createGain();
@@ -260,20 +274,21 @@
     const keepAliveSource = createKeepAliveNoise(ctx);
 
     const limiter = ctx.createDynamicsCompressor();
-    limiter.knee.value = 0;
+    limiter.knee.value = 1;
     limiter.ratio.value = 20;
-    limiter.attack.value = 0.0001;
-    limiter.release.value = 0.01;
+    limiter.attack.value = 0.00008;
+    limiter.release.value = 0.008;
 
     const meter = ctx.createAnalyser();
     meter.fftSize = 1024;
-    meter.smoothingTimeConstant = 0.18;
+    meter.smoothingTimeConstant = 0.15;
 
     const dst = ctx.createMediaStreamDestination();
     source.connect(hp);
     hp.connect(low);
     low.connect(pres);
-    pres.connect(high);
+    pres.connect(presencePeak);
+    presencePeak.connect(high);
     high.connect(comp1);
     comp1.connect(comp2);
     comp2.connect(loudness);
@@ -294,7 +309,7 @@
 
     const pipeline = {
       ctx,
-      nodes: { low, pres, high, comp1, loudness, gain, saturator, sustain, reverbDelay, reverbFeedback, reverbWet, keepAliveGain, limiter, meter },
+      nodes: { low, pres, presencePeak, high, comp1, loudness, gain, saturator, sustain, reverbDelay, reverbFeedback, reverbWet, keepAliveGain, limiter, meter },
       keepAliveSource,
       sustainTimer: null
     };
@@ -496,14 +511,14 @@
     if (typeof sdp !== 'string' || !sdp.includes('m=audio')) return sdp;
     let next = sdp;
     next = next.replace(/a=fmtp:111 ([^\r\n]*)/g, (line, params) => {
-      const additions = ['maxaveragebitrate=512000', 'stereo=0', 'sprop-stereo=0', 'useinbandfec=1', 'usedtx=0'];
+      const additions = ['maxaveragebitrate=640000', 'stereo=0', 'sprop-stereo=0', 'useinbandfec=1', 'usedtx=0'];
       const merged = params || '';
       const suffix = additions.filter((item) => !new RegExp(`(^|;)\\s*${item.split('=')[0]}=`, 'i').test(merged));
-      return suffix.length ? `\( {line}; \){suffix.join(';')}` : line;
+      return suffix.length ? `${line};${suffix.join(';')}` : line;
     });
-    next = next.replace(/b=AS:\d+/g, 'b=AS:512').replace(/b=TIAS:\d+/g, 'b=TIAS:512000');
-    if (!/b=AS:512/.test(next)) next = next.replace(/(m=audio[^\r\n]*(?:\r?\n)c=IN[^\r\n]*)/, '$1\r\nb=AS:512');
-    if (!/b=TIAS:512000/.test(next)) next = next.replace(/(b=AS:512)/, '$1\r\nb=TIAS:512000');
+    next = next.replace(/b=AS:\d+/g, 'b=AS:640').replace(/b=TIAS:\d+/g, 'b=TIAS:640000');
+    if (!/b=AS:640/.test(next)) next = next.replace(/(m=audio[^\r\n]*(?:\r?\n)c=IN[^\r\n]*)/, '$1\r\nb=AS:640');
+    if (!/b=TIAS:640000/.test(next)) next = next.replace(/(b=AS:640)/, '$1\r\nb=TIAS:640000');
     return next;
   }
 
@@ -525,7 +540,7 @@
         ...encoding,
         active: encoding.active !== false,
         dtx: false,
-        maxBitrate: Math.max(Number(encoding.maxBitrate) || 0, AUDIO_SEND_MAX_BITRATE),
+        maxBitrate: Math.max(Number(encoding.maxBitrate) || 0, 640000),
         networkPriority: 'high',
         priority: 'high'
       }));
@@ -600,7 +615,7 @@
     state.refreshingSenders.add(sender);
     setTimeout(() => {
       replaceSenderTrack(sender, track).finally(() => state.refreshingSenders.delete(sender));
-    }, 50);
+    }, 40);
   }
 
   function watchSenderTrack(sender, track) {
@@ -609,14 +624,14 @@
     if (!state.processedTracks.has(track) || state.senderWatchTracks.has(track)) return;
     state.senderWatchTracks.add(track);
     track.addEventListener('ended', () => queueSenderRefresh(sender, track), { once: true });
-    track.addEventListener('mute', () => setTimeout(() => queueSenderRefresh(sender, track), 120), { passive: true });
+    track.addEventListener('mute', () => setTimeout(() => queueSenderRefresh(sender, track), 100), { passive: true });
     track.addEventListener('unmute', () => tuneAudioSender(sender), { passive: true });
   }
 
   function scheduleRecoveryPasses() {
     for (const timer of state.recoverTimers) clearTimeout(timer);
     state.recoverTimers.clear();
-    [0, 150, 500, 1200, 2500, 5000, 9000].forEach((delay) => {
+    [0, 120, 400, 1000, 2000, 4000, 7500].forEach((delay) => {
       const timer = setTimeout(() => {
         state.recoverTimers.delete(timer);
         resumeAllPipelines();
@@ -828,6 +843,8 @@
       wrapped(state.origLegacy, constraints, navigator).then(ok).catch((err) => fail && fail(err));
     };
   }
+
+  patchTrackConstraints();
 
   window.addEventListener('message', (event) => {
     if (event.source !== window || !event.data || event.data.type !== MSG_CFG) return;
