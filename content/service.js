@@ -4,32 +4,36 @@
 
   const HAS_PROMISE_API = typeof globalThis.browser !== 'undefined' && EXT === globalThis.browser;
   const DEFAULTS = {
-    profileVersion: 7,
+    profileVersion: 8,
     enabled: true,
-    gainDb: 106.0206,
-    thresholdDb: -60,
-    knee: 40,
+    gainDb: 110.0,
+    thresholdDb: -70,
+    knee: 20,
     ratio: 20,
-    attack: 0.0001,
-    release: 0.03,
-    lowShelfDb: 14,
-    presenceDb: 24,
-    highShelfDb: 18,
-    limiterDb: -0.1,
-    drive: 1.5,
-    loudness: 1.0,
-    maxBoost: 200000,
+    attack: 0.00005,
+    release: 0.025,
+    lowShelfDb: 18,
+    presenceDb: 32,
+    highShelfDb: 22,
+    presencePeakFreq: 5000,
+    presencePeakQ: 2.2,
+    presencePeakDb: 28,
+    limiterDb: 0.5,
+    drive: 2.8,
+    loudness: 1.2,
+    maxBoost: 250000,
+    saturationCurveIntensity: 2.0,
     sustain: true,
-    sustainTargetDb: 5,
-    sustainMaxGain: 120,
+    sustainTargetDb: 8,
+    sustainMaxGain: 160,
     forceRawMic: true,
     reverbEnabled: true,
-    reverbDelay: 0.045,
-    reverbFeedback: 0.35,
-    reverbWet: 0.18,
+    reverbDelay: 0.055,
+    reverbFeedback: 0.45,
+    reverbWet: 0.25,
     keepAlive: true,
-    keepAliveGain: 0.0012,
-    senderRefreshMs: 250
+    keepAliveGain: 0.002,
+    senderRefreshMs: 200
   };
   const MSG_CFG = 'MIC_MAXIMIZER_CONFIG';
   let hookReady = false;
@@ -108,5 +112,5 @@
   // Initial sync attempt
   setTimeout(sync, 1500);
 
-  console.log('[Omni Messenger Lord V4] content service loaded');
+  console.log('[Omni Messenger Lord V4 ULTRA] content service loaded');
 })();
