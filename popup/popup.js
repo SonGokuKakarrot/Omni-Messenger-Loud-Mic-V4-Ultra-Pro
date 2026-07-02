@@ -1,287 +1,299 @@
-const EXT = globalThis.browser ?? globalThis.chrome;
-const HAS_PROMISE_API = typeof globalThis.browser !== 'undefined' && EXT === globalThis.browser;
+(() => {
+  const EXT = globalThis.browser ?? globalThis.chrome;
+  if (!EXT?.runtime || !EXT?.storage?.local) return;
 
-const DEFAULTS = {
-  profileVersion: 8,
-  enabled: true,
-  gainDb: 110.0,
-  loudness: 1.2,
-  maxBoost: 250000,
-  drive: 2.8,
-  saturationCurveIntensity: 2.0,
-  thresholdDb: -70,
-  ratio: 20,
-  limiterDb: 0.5,
-  presenceDb: 32,
-  lowShelfDb: 18,
-  highShelfDb: 22,
-  presencePeakDb: 28,
-  presencePeakFreq: 5000,
-  presencePeakQ: 2.2,
-  sustain: true,
-  sustainTargetDb: 8,
-  sustainMaxGain: 160,
-  forceRawMic: true,
-  reverbEnabled: true,
-  reverbDelay: 0.055,
-  reverbFeedback: 0.45,
-  reverbWet: 0.25,
-  keepAlive: true,
-  keepAliveGain: 0.002,
-  attack: 0.00005,
-  release: 0.025,
-  senderRefreshMs: 200
-};
+  const PRESETS = {
+    royal: {
+      name: 'Royal Clear',
+      description: 'Balanced & clean',
+      config: {
+        profileVersion: 8,
+        enabled: true,
+        gainDb: 65.0,
+        thresholdDb: -50,
+        knee: 15,
+        ratio: 8,
+        attack: 0.0005,
+        release: 0.04,
+        lowShelfDb: 8,
+        presenceDb: 12,
+        highShelfDb: 10,
+        presencePeakDb: 8,
+        presencePeakFreq: 5000,
+        presencePeakQ: 1.5,
+        limiterDb: -1.5,
+        drive: 0.8,
+        loudness: 1.0,
+        saturationCurveIntensity: 0.8,
+        maxBoost: 50000,
+        sustain: true,
+        sustainTargetDb: 5,
+        sustainMaxGain: 80,
+        forceRawMic: true,
+        reverbEnabled: false,
+        reverbDelay: 0.02,
+        reverbFeedback: 0.2,
+        reverbWet: 0.1,
+        keepAlive: true,
+        keepAliveGain: 0.0008
+      }
+    },
+    lord: {
+      name: 'Lord V4',
+      description: 'Extreme volume',
+      config: {
+        profileVersion: 8,
+        enabled: true,
+        gainDb: 100.0,
+        thresholdDb: -65,
+        knee: 18,
+        ratio: 18,
+        attack: 0.00008,
+        release: 0.028,
+        lowShelfDb: 16,
+        presenceDb: 28,
+        highShelfDb: 20,
+        presencePeakDb: 24,
+        presencePeakFreq: 5000,
+        presencePeakQ: 2.0,
+        limiterDb: -0.5,
+        drive: 2.2,
+        loudness: 1.15,
+        saturationCurveIntensity: 1.8,
+        maxBoost: 150000,
+        sustain: true,
+        sustainTargetDb: 7,
+        sustainMaxGain: 140,
+        forceRawMic: true,
+        reverbEnabled: true,
+        reverbDelay: 0.05,
+        reverbFeedback: 0.4,
+        reverbWet: 0.2,
+        keepAlive: true,
+        keepAliveGain: 0.0015
+      }
+    },
+    ultraQuetta: {
+      name: 'Ultra Quetta',
+      description: 'BEAST MODE - Surpass PC users',
+      config: {
+        profileVersion: 8,
+        enabled: true,
+        gainDb: 125.0,
+        thresholdDb: -80,
+        knee: 25,
+        ratio: 20,
+        attack: 0.00003,
+        release: 0.015,
+        lowShelfDb: 22,
+        presenceDb: 38,
+        highShelfDb: 28,
+        presencePeakDb: 35,
+        presencePeakFreq: 4500,
+        presencePeakQ: 2.8,
+        limiterDb: 1.0,
+        drive: 4.2,
+        loudness: 1.4,
+        saturationCurveIntensity: 3.5,
+        maxBoost: 250000,
+        sustain: true,
+        sustainTargetDb: 12,
+        sustainMaxGain: 200,
+        forceRawMic: true,
+        reverbEnabled: true,
+        reverbDelay: 0.08,
+        reverbFeedback: 0.55,
+        reverbWet: 0.35,
+        keepAlive: true,
+        keepAliveGain: 0.003
+      }
+    }
+  };
 
-const PRESETS = {
-  royal: {
-    profileVersion: 8,
-    enabled: true,
-    gainDb: 24,
-    loudness: 4,
-    maxBoost: 2000,
-    drive: 0.28,
-    saturationCurveIntensity: 1.0,
-    thresholdDb: -38,
-    ratio: 12,
-    limiterDb: -2,
-    presenceDb: 8,
-    lowShelfDb: 4,
-    highShelfDb: 6,
-    presencePeakDb: 4,
-    presencePeakFreq: 5000,
-    presencePeakQ: 1.5,
-    sustain: true,
-    sustainTargetDb: -8,
-    sustainMaxGain: 12,
-    forceRawMic: true,
-    reverbEnabled: true,
-    reverbDelay: 0.035,
-    reverbFeedback: 0.18,
-    reverbWet: 0.08,
-    keepAlive: true,
-    keepAliveGain: 0.0002,
-    attack: 0.0001,
-    release: 0.03,
-    senderRefreshMs: 750
-  },
-  lord: {
-    profileVersion: 8,
-    enabled: true,
-    gainDb: 106.0206,
-    loudness: 1,
-    maxBoost: 200000,
-    drive: 1.5,
-    saturationCurveIntensity: 1.0,
-    thresholdDb: -60,
-    ratio: 20,
-    limiterDb: -0.1,
-    presenceDb: 24,
-    lowShelfDb: 14,
-    highShelfDb: 18,
-    presencePeakDb: 18,
-    presencePeakFreq: 5000,
-    presencePeakQ: 1.8,
-    sustain: true,
-    sustainTargetDb: 5,
-    sustainMaxGain: 120,
-    forceRawMic: true,
-    reverbEnabled: true,
-    reverbDelay: 0.045,
-    reverbFeedback: 0.35,
-    reverbWet: 0.18,
-    keepAlive: true,
-    keepAliveGain: 0.0012,
-    attack: 0.00005,
-    release: 0.03,
-    senderRefreshMs: 250
-  },
-  ultraQuetta: {
-    profileVersion: 8,
-    enabled: true,
-    gainDb: 110.0,
-    loudness: 1.2,
-    maxBoost: 250000,
-    drive: 2.8,
-    saturationCurveIntensity: 2.0,
-    thresholdDb: -70,
-    ratio: 20,
-    limiterDb: 0.5,
-    presenceDb: 32,
-    lowShelfDb: 18,
-    highShelfDb: 22,
-    presencePeakDb: 28,
-    presencePeakFreq: 5000,
-    presencePeakQ: 2.2,
-    sustain: true,
-    sustainTargetDb: 8,
-    sustainMaxGain: 160,
-    forceRawMic: true,
-    reverbEnabled: true,
-    reverbDelay: 0.055,
-    reverbFeedback: 0.45,
-    reverbWet: 0.25,
-    keepAlive: true,
-    keepAliveGain: 0.002,
-    attack: 0.00005,
-    release: 0.025,
-    senderRefreshMs: 200
+  const HAS_PROMISE_API = typeof globalThis.browser !== 'undefined' && EXT === globalThis.browser;
+  let currentPreset = 'royal';
+
+  function storageSet(key, value) {
+    if (HAS_PROMISE_API) return EXT.storage.local.set({ [key]: value });
+    return new Promise((resolve) => {
+      try {
+        EXT.storage.local.set({ [key]: value }, () => resolve());
+      } catch (_) {
+        resolve();
+      }
+    });
   }
-};
 
-const ids = Object.keys(DEFAULTS).filter((id) => id !== 'profileVersion');
-
-function storageGet(key) {
-  if (HAS_PROMISE_API) return EXT.storage.local.get(key);
-  return new Promise((resolve) => {
-    try {
-      EXT.storage.local.get(key, (res) => {
-        if (EXT.runtime?.lastError) resolve({});
-        else resolve(res || {});
-      });
-    } catch (_) {
-      resolve({});
-    }
-  });
-}
-
-function storageSet(value) {
-  if (HAS_PROMISE_API) return EXT.storage.local.set(value);
-  return new Promise((resolve) => {
-    try {
-      EXT.storage.local.set(value, () => resolve(!EXT.runtime?.lastError));
-    } catch (_) {
-      resolve(false);
-    }
-  });
-}
-
-function sendMessage(message) {
-  if (HAS_PROMISE_API) return EXT.runtime.sendMessage(message);
-  return new Promise((resolve) => {
-    try {
-      EXT.runtime.sendMessage(message, (res) => {
-        if (EXT.runtime?.lastError) resolve(null);
-        else resolve(res || null);
-      });
-    } catch (_) {
-      resolve(null);
-    }
-  });
-}
-
-function numberText(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return String(value);
-  if (Math.abs(n) > 0 && Math.abs(n) < 0.01) return n.toFixed(5);
-  if (Math.abs(n) < 1 && !Number.isInteger(n)) return n.toFixed(2);
-  return Math.abs(n) < 10 && !Number.isInteger(n) ? n.toFixed(1) : String(Math.round(n));
-}
-
-function multiplierFromGainDb(gainDb) {
-  return Math.round(Math.pow(10, Number(gainDb) / 20));
-}
-
-function updateLabels() {
-  ids.forEach((id) => {
-    const el = document.getElementById(id);
-    const label = document.getElementById(`${id}Val`);
-    if (!label || el?.type === 'checkbox') return;
-    label.textContent = id === 'gainDb' 
-      ? `${numberText(el.value)} dB / ${multiplierFromGainDb(el.value)}x` 
-      : numberText(el.value);
-  });
-}
-
-function presetMatches(config, preset) {
-  return Object.entries(preset).every(([key, value]) => 
-    Number(config[key]) === Number(value) || config[key] === value
-  );
-}
-
-function activePreset(config) {
-  if (presetMatches(config, PRESETS.royal)) return 'royal';
-  if (presetMatches(config, PRESETS.lord)) return 'lord';
-  if (presetMatches(config, PRESETS.ultraQuetta)) return 'ultraQuetta';
-  return 'custom';
-}
-
-function updatePresetState(config) {
-  const active = activePreset(config);
-  document.body.dataset.theme = active;
-  const royalButton = document.getElementById('royalPreset');
-  const lordButton = document.getElementById('lordPreset');
-  const ultraButton = document.getElementById('ultraQuettaPreset');
-  royalButton?.classList.toggle('active', active === 'royal');
-  royalButton?.setAttribute('aria-pressed', String(active === 'royal'));
-  lordButton?.classList.toggle('active', active === 'lord');
-  lordButton?.setAttribute('aria-pressed', String(active === 'lord'));
-  ultraButton?.classList.toggle('active', active === 'ultraQuetta');
-  ultraButton?.setAttribute('aria-pressed', String(active === 'ultraQuetta'));
-}
-
-function applyToControls(config) {
-  ids.forEach((id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (el.type === 'checkbox') el.checked = Boolean(config[id]);
-    else el.value = config[id];
-  });
-  updateLabels();
-  updatePresetState(config);
-}
-
-async function readConfig() {
-  const stored = await storageGet('micMaximizerConfig');
-  const saved = stored.micMaximizerConfig || {};
-  if (saved.profileVersion !== DEFAULTS.profileVersion) return { ...DEFAULTS };
-  return { ...DEFAULTS, ...saved };
-}
-
-async function saveConfig(config) {
-  const merged = { ...DEFAULTS, ...config };
-  await storageSet({ micMaximizerConfig: merged });
-  applyToControls(merged);
-}
-
-async function onControlInput(id, el) {
-  const merged = await readConfig();
-  merged[id] = el.type === 'checkbox' ? el.checked : Number(el.value);
-  await saveConfig(merged);
-}
-
-async function init() {
-  if (!EXT?.storage?.local) return;
-  applyToControls(await readConfig());
-  ids.forEach((id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener('input', () => onControlInput(id, el));
-  });
-  document.getElementById('royalPreset')?.addEventListener('click', () => saveConfig(PRESETS.royal));
-  document.getElementById('lordPreset')?.addEventListener('click', () => saveConfig(PRESETS.lord));
-  document.getElementById('ultraQuettaPreset')?.addEventListener('click', () => saveConfig(PRESETS.ultraQuetta));
-}
-
-async function refreshHookStatus() {
-  const el = document.getElementById('hookStatus');
-  if (!el || !EXT?.runtime) return;
-  try {
-    const status = await sendMessage({ type: 'MICMAX_STATUS_REQUEST' });
-    const ageMs = status?.lastHeartbeat ? Date.now() - status.lastHeartbeat : Infinity;
-    if (status?.ok && ageMs < 12000) {
-      el.textContent = '✅ Hook status: ACTIVE on Facebook/Messenger/Instagram';
-      el.className = 'status ok';
-    } else {
-      el.textContent = '⏳ Hook status: waiting — open or reload Facebook/Messenger/Instagram Web';
-      el.className = 'status warn';
-    }
-  } catch (_) {
-    el.textContent = '❌ Hook status: unavailable';
-    el.className = 'status warn';
+  function storageGet(key) {
+    if (HAS_PROMISE_API) return EXT.storage.local.get(key);
+    return new Promise((resolve) => {
+      try {
+        EXT.storage.local.get(key, (res) => {
+          if (EXT.runtime?.lastError) resolve({});
+          else resolve(res || {});
+        });
+      } catch (_) {
+        resolve({});
+      }
+    });
   }
-}
 
-init();
-setInterval(refreshHookStatus, 3000);
-refreshHookStatus();
+  async function applyPreset(presetName) {
+    const preset = PRESETS[presetName];
+    if (!preset) return;
+    
+    currentPreset = presetName;
+    const config = { ...preset.config };
+    
+    await storageSet('micMaximizerConfig', config);
+    
+    // Update UI
+    updatePresetButtons(presetName);
+    updateControlsFromConfig(config);
+    
+    console.log(`[Omni] Applied preset: ${preset.name}`);
+  }
+
+  function updatePresetButtons(active) {
+    document.querySelectorAll('.preset').forEach((btn) => {
+      btn.classList.remove('active');
+    });
+    const activeBtn = document.querySelector(`.preset.${active}`);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+
+  function updateControlsFromConfig(config) {
+    // Update all control sliders to match preset
+    const controls = [
+      'gainDb', 'thresholdDb', 'knee', 'ratio', 'attack', 'release',
+      'lowShelfDb', 'presenceDb', 'presencePeakDb', 'presencePeakFreq', 
+      'presencePeakQ', 'highShelfDb', 'limiterDb', 'drive', 'loudness',
+      'saturationCurveIntensity', 'sustainTargetDb', 'sustainMaxGain',
+      'keepAliveGain', 'maxBoost', 'reverbDelay', 'reverbFeedback', 'reverbWet'
+    ];
+
+    controls.forEach((controlId) => {
+      const input = document.getElementById(controlId);
+      const output = document.getElementById(`${controlId}Out`);
+      if (input && config[controlId] !== undefined) {
+        input.value = config[controlId];
+        if (output) output.textContent = formatOutput(controlId, config[controlId]);
+      }
+    });
+
+    // Update checkboxes
+    const checkboxes = ['enabled', 'sustain', 'forceRawMic', 'reverbEnabled', 'keepAlive'];
+    checkboxes.forEach((checkId) => {
+      const checkbox = document.getElementById(checkId);
+      if (checkbox && config[checkId] !== undefined) {
+        checkbox.checked = Boolean(config[checkId]);
+      }
+    });
+  }
+
+  function formatOutput(controlId, value) {
+    if (controlId.includes('Freq')) return `${Math.round(value)} Hz`;
+    if (controlId.includes('Q')) return value.toFixed(2);
+    if (controlId.includes('Gain') || controlId.includes('Db')) return `${value.toFixed(1)} dB`;
+    if (controlId.includes('Bitrate')) return `${Math.round(value / 1000)} kbps`;
+    if (controlId === 'maxBoost') return `${value.toLocaleString()}x`;
+    return value.toFixed(value < 1 ? 4 : 2);
+  }
+
+  async function onControlInput(id, el) {
+    const config = await loadConfig();
+    const value = parseFloat(el.value);
+    config[id] = value;
+    
+    const output = document.getElementById(`${id}Out`);
+    if (output) output.textContent = formatOutput(id, value);
+    
+    await storageSet('micMaximizerConfig', config);
+    console.log(`[Omni] Updated ${id}: ${value}`);
+  }
+
+  async function onCheckboxChange(id, el) {
+    const config = await loadConfig();
+    config[id] = el.checked;
+    await storageSet('micMaximizerConfig', config);
+    console.log(`[Omni] Updated ${id}: ${el.checked}`);
+  }
+
+  async function init() {
+    // Load current config
+    const config = await loadConfig();
+    updateControlsFromConfig(config);
+    
+    // Setup preset buttons
+    document.querySelectorAll('.preset').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const presetName = btn.classList.contains('royal') ? 'royal'
+          : btn.classList.contains('lord') ? 'lord'
+          : 'ultraQuetta';
+        await applyPreset(presetName);
+      });
+    });
+
+    // Setup control inputs
+    const controls = [
+      'gainDb', 'thresholdDb', 'knee', 'ratio', 'attack', 'release',
+      'lowShelfDb', 'presenceDb', 'presencePeakDb', 'presencePeakFreq',
+      'presencePeakQ', 'highShelfDb', 'limiterDb', 'drive', 'loudness',
+      'saturationCurveIntensity', 'sustainTargetDb', 'sustainMaxGain',
+      'keepAliveGain', 'maxBoost', 'reverbDelay', 'reverbFeedback', 'reverbWet'
+    ];
+
+    controls.forEach((controlId) => {
+      const input = document.getElementById(controlId);
+      if (input) input.addEventListener('input', (e) => onControlInput(controlId, e.target));
+    });
+
+    // Setup checkboxes
+    const checkboxes = ['enabled', 'sustain', 'forceRawMic', 'reverbEnabled', 'keepAlive'];
+    checkboxes.forEach((checkId) => {
+      const checkbox = document.getElementById(checkId);
+      if (checkbox) checkbox.addEventListener('change', (e) => onCheckboxChange(checkId, e.target));
+    });
+
+    await refreshHookStatus();
+  }
+
+  async function refreshHookStatus() {
+    const status = document.querySelector('.status');
+    if (!status) return;
+    
+    try {
+      const response = await EXT.runtime.sendMessage({ type: 'MICMAX_STATUS_REQUEST' });
+      if (response?.ok) {
+        status.textContent = '✅ Hook Active | Injected into call page';
+        status.classList.remove('warn');
+        status.classList.add('ok');
+      } else {
+        status.textContent = '⚠️ Waiting for call page to load...';
+        status.classList.remove('ok');
+        status.classList.add('warn');
+      }
+    } catch (_) {
+      status.textContent = '⚠️ Open Messenger/Instagram call to activate';
+      status.classList.remove('ok');
+      status.classList.add('warn');
+    }
+  }
+
+  async function loadConfig() {
+    try {
+      const res = await storageGet('micMaximizerConfig');
+      return res.micMaximizerConfig || PRESETS.royal.config;
+    } catch (_) {
+      return PRESETS.royal.config;
+    }
+  }
+
+  // Initialize on load
+  document.addEventListener('DOMContentLoaded', init);
+  
+  // Periodic status refresh
+  setInterval(refreshHookStatus, 3000);
+
+  console.log('[Omni Messenger Lord V4 ULTRA] popup loaded');
+})();
