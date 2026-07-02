@@ -278,11 +278,15 @@
     try {
       const response = await EXT.runtime.sendMessage({ type: 'MICMAX_STATUS_REQUEST' });
       if (response?.ok) {
-        status.textContent = '✅ Hook Active | Injected into call page';
+        status.textContent = '✅ Hook Active | Current Facebook, Messenger, or Instagram tab is injected';
         status.classList.remove('warn');
         status.classList.add('ok');
+      } else if (response?.reason === 'not_target_page') {
+        status.textContent = '⚠️ Not active here. Open a Facebook, Messenger, or Instagram tab.';
+        status.classList.remove('ok');
+        status.classList.add('warn');
       } else {
-        status.textContent = '⚠️ Waiting for call page to load...';
+        status.textContent = '⚠️ Waiting for this call page hook to load...';
         status.classList.remove('ok');
         status.classList.add('warn');
       }
