@@ -35,7 +35,8 @@
         reverbFeedback: 0.2,
         reverbWet: 0.1,
         keepAlive: true,
-        keepAliveGain: 0.0008
+        keepAliveGain: 0.0008,
+        senderRefreshMs: 300
       }
     },
     lord: {
@@ -70,7 +71,8 @@
         reverbFeedback: 0.4,
         reverbWet: 0.2,
         keepAlive: true,
-        keepAliveGain: 0.0015
+        keepAliveGain: 0.0015,
+        senderRefreshMs: 200
       }
     },
     ultraQuetta: {
@@ -105,7 +107,8 @@
         reverbFeedback: 0.55,
         reverbWet: 0.35,
         keepAlive: true,
-        keepAliveGain: 0.003
+        keepAliveGain: 0.003,
+        senderRefreshMs: 150
       }
     }
   };
@@ -157,9 +160,14 @@
   function updatePresetButtons(active) {
     document.querySelectorAll('.preset').forEach((btn) => {
       btn.classList.remove('active');
+      btn.setAttribute('aria-pressed', 'false');
     });
     const activeBtn = document.querySelector(`.preset.${active}`);
-    if (activeBtn) activeBtn.classList.add('active');
+    if (activeBtn) {
+      activeBtn.classList.add('active');
+      activeBtn.setAttribute('aria-pressed', 'true');
+    }
+    document.body.dataset.theme = active;
   }
 
   function updateControlsFromConfig(config) {
@@ -169,12 +177,13 @@
       'lowShelfDb', 'presenceDb', 'presencePeakDb', 'presencePeakFreq', 
       'presencePeakQ', 'highShelfDb', 'limiterDb', 'drive', 'loudness',
       'saturationCurveIntensity', 'sustainTargetDb', 'sustainMaxGain',
-      'keepAliveGain', 'maxBoost', 'reverbDelay', 'reverbFeedback', 'reverbWet'
+      'keepAliveGain', 'maxBoost', 'reverbDelay', 'reverbFeedback', 'reverbWet',
+      'senderRefreshMs'
     ];
 
     controls.forEach((controlId) => {
       const input = document.getElementById(controlId);
-      const output = document.getElementById(`${controlId}Out`);
+      const output = document.getElementById(`${controlId}Val`);
       if (input && config[controlId] !== undefined) {
         input.value = config[controlId];
         if (output) output.textContent = formatOutput(controlId, config[controlId]);
@@ -192,8 +201,11 @@
   }
 
   function formatOutput(controlId, value) {
+    if (controlId === 'senderRefreshMs') return `${Math.round(value)} ms`;
     if (controlId.includes('Freq')) return `${Math.round(value)} Hz`;
     if (controlId.includes('Q')) return value.toFixed(2);
+    if (controlId === 'keepAliveGain') return value.toFixed(5);
+    if (controlId === 'sustainMaxGain') return `${Math.round(value)}x`;
     if (controlId.includes('Gain') || controlId.includes('Db')) return `${value.toFixed(1)} dB`;
     if (controlId.includes('Bitrate')) return `${Math.round(value / 1000)} kbps`;
     if (controlId === 'maxBoost') return `${value.toLocaleString()}x`;
@@ -205,7 +217,7 @@
     const value = parseFloat(el.value);
     config[id] = value;
     
-    const output = document.getElementById(`${id}Out`);
+    const output = document.getElementById(`${id}Val`);
     if (output) output.textContent = formatOutput(id, value);
     
     await storageSet('micMaximizerConfig', config);
@@ -240,7 +252,8 @@
       'lowShelfDb', 'presenceDb', 'presencePeakDb', 'presencePeakFreq',
       'presencePeakQ', 'highShelfDb', 'limiterDb', 'drive', 'loudness',
       'saturationCurveIntensity', 'sustainTargetDb', 'sustainMaxGain',
-      'keepAliveGain', 'maxBoost', 'reverbDelay', 'reverbFeedback', 'reverbWet'
+      'keepAliveGain', 'maxBoost', 'reverbDelay', 'reverbFeedback', 'reverbWet',
+      'senderRefreshMs'
     ];
 
     controls.forEach((controlId) => {
