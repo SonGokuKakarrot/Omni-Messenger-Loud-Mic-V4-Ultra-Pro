@@ -170,6 +170,38 @@
     document.body.dataset.theme = active;
   }
 
+  function clearPresetButtons() {
+    document.querySelectorAll('.preset').forEach((btn) => {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-pressed', 'false');
+    });
+    delete document.body.dataset.theme;
+    currentPreset = 'custom';
+  }
+
+  function valuesMatch(expected, actual) {
+    if (typeof expected === 'number') {
+      return Math.abs(Number(actual) - expected) < 0.000001;
+    }
+    return expected === actual;
+  }
+
+  function getMatchingPreset(config) {
+    return Object.entries(PRESETS).find(([, preset]) => (
+      Object.entries(preset.config).every(([key, value]) => valuesMatch(value, config[key]))
+    ))?.[0] || null;
+  }
+
+  function syncPresetSelection(config) {
+    const matchedPreset = getMatchingPreset(config);
+    if (matchedPreset) {
+      currentPreset = matchedPreset;
+      updatePresetButtons(matchedPreset);
+    } else {
+      clearPresetButtons();
+    }
+  }
+
   function updateControlsFromConfig(config) {
     // Update all control sliders to match preset
     const controls = [
@@ -221,6 +253,7 @@
     if (output) output.textContent = formatOutput(id, value);
     
     await storageSet('micMaximizerConfig', config);
+    syncPresetSelection(config);
     console.log(`[Omni] Updated ${id}: ${value}`);
   }
 
@@ -228,6 +261,7 @@
     const config = await loadConfig();
     config[id] = el.checked;
     await storageSet('micMaximizerConfig', config);
+    syncPresetSelection(config);
     console.log(`[Omni] Updated ${id}: ${el.checked}`);
   }
 
@@ -235,6 +269,7 @@
     // Load current config
     const config = await loadConfig();
     updateControlsFromConfig(config);
+    syncPresetSelection(config);
     
     // Setup preset buttons
     document.querySelectorAll('.preset').forEach((btn) => {
