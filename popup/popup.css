@@ -4,9 +4,8 @@
   Omni Messenger Lord V4 ULTRA popup stylesheet
   ------------------------------------------------
   This file intentionally explains the UI styling because the popup has many
-  high-powered audio presets.  Each preset button exposes its actual preset
-  values through CSS custom properties and visible chips so users can understand
-  what will be applied before tapping a mode.
+  high-powered audio presets. Preset buttons stay clean and compact while the
+  detailed slider values remain in the controls below.
 */
 
 :root {
@@ -27,10 +26,6 @@
   --danger: #ffbe55;
   --panel-glow: rgba(246, 211, 101, 0.28);
 
-  /* Preset value labels. These mirror popup.js PRESETS exactly. */
-  --royal-values: "Gain 65dB • Loud 1.0x • Max 50,000x • Drive 0.8 • Sustain +5dB / 80x • Reverb off • Refresh 300ms";
-  --lord-values: "Gain 100dB • Loud 1.15x • Max 150,000x • Drive 2.2 • Sustain +7dB / 140x • Reverb 0.20 • Refresh 200ms";
-  --ultra-values: "Gain 125dB • Loud 1.4x • Max 250,000x • Drive 4.2 • Sustain +12dB / 200x • Reverb 0.35 • Refresh 150ms";
 }
 
 * { box-sizing: border-box; }
@@ -251,8 +246,8 @@ footer {
 
 .preset {
   position: relative;
-  min-height: 92px;
-  padding: 11px 12px 36px;
+  min-height: 74px;
+  padding: 11px 12px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 18px;
@@ -271,27 +266,6 @@ footer {
   transform: translateX(-110%);
   transition: transform 0.35s ease;
 }
-
-/* Value chips: each preset shows the actual applied values from popup.js. */
-.preset::after {
-  position: absolute;
-  right: 9px;
-  bottom: 9px;
-  left: 9px;
-  padding: 6px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 11px;
-  background: rgba(0, 0, 0, 0.28);
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 10px;
-  font-weight: 900;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-}
-
-.preset.royal::after { content: var(--royal-values); }
-.preset.lord::after { content: var(--lord-values); }
-.preset.ultraQuetta::after { content: var(--ultra-values); }
 
 .preset strong,
 .preset small { display: block; position: relative; z-index: 1; }
@@ -350,12 +324,6 @@ footer {
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2), 0 0 28px rgba(0, 217, 255, 0.75), 0 0 45px rgba(0, 217, 255, 0.45), inset 0 0 12px rgba(0, 217, 255, 0.3);
 }
 
-.preset.active::after,
-.preset[aria-pressed="true"]::after {
-  background: rgba(255, 255, 255, 0.72);
-  color: #06202a;
-  border-color: rgba(255, 255, 255, 0.82);
-}
 
 .hint {
   margin: 9px 0 0;
