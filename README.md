@@ -2,7 +2,7 @@
 
 **Developed by Omni**
 
-## 🔊 Now with 250000x ULTRA Profile for Android Quetta Browser!
+## 🔊 Now with 500000x MAX Profile for Android Quetta Browser!
 
 This is the **loudest messenger/Instagram browser call extension ever made**, with extreme real-time DSP control optimized for Android Quetta.
 
@@ -33,14 +33,14 @@ The original extreme profile. Very aggressive.
 - Limiter Ceiling: -0.1 dB
 - Best for maximum volume with some distortion tolerance
 
-### 3. **🔊 Ultra Quetta** (250000x — NEW!)
-**Maximum loudness for Android Quetta browser.** Breaks all safety limits.
-- **Gain: 110 dB (250000x!)**
-- Saturation Intensity: 2.0x (hyper-aggressive curve)
-- 5kHz presence peak: +28 dB (voice intelligibility)
-- Compressor attack: 0.00005s (instant response)
-- Limiter ceiling: +0.5 dB (headroom bypass)
-- Sustain Max Gain: 160 (extreme dynamic hold)
+### 3. **🔊 Ultra Quetta MAX** (500000x — NEW LOUDEST!)
+**Maximum loudness for Facebook/Messenger/Instagram browser calls.** Breaks all safety limits.
+- **Gain: 128 dB (500000x!)**
+- Saturation Intensity: 4.0x (hyper-aggressive curve)
+- 4.8kHz presence peak: +40 dB (voice intelligibility)
+- Compressor attack: 0.00003s (instant response)
+- Limiter ceiling: +1.5 dB (headroom bypass)
+- Sustain Max Gain: 240 (extreme dynamic hold)
 - **For Quetta browser + raw WebRTC only**
 
 ---
@@ -49,13 +49,13 @@ The original extreme profile. Very aggressive.
 
 ### ✅ Increase these (move slider RIGHT):
 
-1. **Gain dB** (0–125 dB range) — Primary volume boost
-2. **Loudness Trim** (0.5–250000x) — Multiplicative gain
-3. **Boost ceiling** (1–250000x) — Loudness hard cap
-4. **Saturation Drive** (0–15) — Harmonic distortion intensity
-5. **Saturation Intensity** (0.5–5.0) — Curve aggressiveness
+1. **Gain dB** (0–140 dB range) — Primary volume boost
+2. **Loudness Trim** (0.5–500000x) — Multiplicative gain
+3. **Boost ceiling** (1–500000x) — Loudness hard cap
+4. **Saturation Drive** (0–20) — Harmonic distortion intensity
+5. **Saturation Intensity** (0.5–6.0) — Curve aggressiveness
 6. **Compressor Ratio** (1–20) — Compression ratio
-7. **Sustain Max Gain** (1–200) — Anti-ducking hold
+7. **Sustain Max Gain** (1–300) — Anti-ducking hold
 8. **Presence EQ** (-60 to +60 dB) — Upper midrange (3200 Hz)
 9. **5kHz Peak** (-60 to +60 dB) — Voice presence (Android clarity)
 10. **Treble EQ** (-60 to +60 dB) — High frequency boost
@@ -77,15 +77,15 @@ The original extreme profile. Very aggressive.
 
 ## 🎯 BEST ORDER TO ADJUST (Maximum Loudness)
 
-1. **Start with a preset** (Royal Clear → Lord V4 → Ultra Quetta)
+1. **Start with a preset** (Royal Clear → Lord V4 → Ultra Quetta MAX)
 2. **Increase Gain dB first** (biggest impact on volume)
-3. **Lower Compressor Threshold to -70 or -80 dB** (activates aggressive compression)
+3. **Lower Compressor Threshold to -82 or -88 dB** (activates aggressive compression)
 4. **Raise Compressor Ratio to 20** (maximum compression)
-5. **Increase Saturation Drive to 2.0–3.0** (adds harmonic punch)
-6. **Boost Presence EQ to +25 to +32 dB** (voice clarity)
-7. **Boost 5kHz Peak to +20 to +28 dB** (Android clarity on calls)
-8. **Adjust Sustain Max Gain to 160** (smooth anti-ducking)
-9. **Fine-tune Limiter Ceiling if distorting** (reduce from +0.5 to -1.0 dB)
+5. **Increase Saturation Drive to 5.0–7.0** (adds harmonic punch)
+6. **Boost Presence EQ to +42 to +50 dB** (voice clarity)
+7. **Boost 4.8kHz Peak to +40 to +48 dB** (Android clarity on calls)
+8. **Adjust Sustain Max Gain to 240** (smooth anti-ducking)
+9. **Fine-tune Limiter Ceiling if distorting** (reduce from +1.5 to -1.0 dB)
 
 ---
 
@@ -93,11 +93,11 @@ The original extreme profile. Very aggressive.
 
 If you hear crackling, popping, or distortion:
 
-1. **Lower Saturation Drive** (2.0 → 1.5 → 1.0)
-2. **Lower Saturation Intensity** (2.0 → 1.5)
-3. **Lower Gain dB** (110 → 100)
-4. **Reduce Limiter Ceiling** (0.5 → -0.5 → -2.0)
-5. **Lower Sustain Max Gain** (160 → 100)
+1. **Lower Saturation Drive** (7.0 → 5.0 → 2.5)
+2. **Lower Saturation Intensity** (5.2 → 4.0 → 2.0)
+3. **Lower Gain dB** (140 → 128 → 100)
+4. **Reduce Limiter Ceiling** (1.8 → 0.5 → -2.0)
+5. **Lower Sustain Max Gain** (300 → 240 → 100)
 
 If still distorted, switch to **Royal Clear** preset (safe mode).
 
@@ -118,7 +118,7 @@ If still distorted, switch to **Royal Clear** preset (safe mode).
   
 - **`popup/popup.html`** — UI (5.1KB)
   - 20+ real-time sliders
-  - 3 preset buttons (Royal Clear, Lord V4, Ultra Quetta)
+  - 3 preset buttons (Royal Clear, Lord V4, Ultra Quetta MAX)
   
 - **`popup/popup.js`** — Control logic (6.4KB)
   - Storage persistence
@@ -140,7 +140,7 @@ If still distorted, switch to **Royal Clear** preset (safe mode).
 6. **Reload the tab** (Ctrl+R or pull refresh)
 7. **Join a call** — extension activates automatically
 8. **Click extension icon** → select preset or adjust sliders
-9. **Test with friend** — you should sound 250000x louder
+9. **Test with friend** — you should sound 500000x louder
 
 ---
 
@@ -148,18 +148,18 @@ If still distorted, switch to **Royal Clear** preset (safe mode).
 
 | Parameter | Min | Default | Max | Unit |
 |-----------|-----|---------|-----|------|
-| Gain | 0 | 110.0 | 125 | dB |
-| Loudness Trim | 0.5 | 1.2 | 250000 | x |
-| Boost Ceiling | 1 | 250000 | 250000 | x |
-| Saturation Drive | 0 | 2.8 | 15 | — |
-| Saturation Intensity | 0.5 | 2.0 | 5.0 | — |
-| Compressor Threshold | -100 | -70 | 0 | dB |
+| Gain | 0 | 128.0 | 140 | dB |
+| Loudness Trim | 0.5 | 1.6 | 500000 | x |
+| Boost Ceiling | 1 | 500000 | 500000 | x |
+| Saturation Drive | 0 | 5.0 | 20 | — |
+| Saturation Intensity | 0.5 | 4.0 | 6.0 | — |
+| Compressor Threshold | -100 | -82 | 0 | dB |
 | Compressor Ratio | 1 | 20 | 20 | — |
-| Compressor Attack | 0.00001 | 0.00005 | 1 | s |
-| Presence EQ (3.2k) | -60 | +32 | +60 | dB |
-| 5kHz Peak | -60 | +28 | +60 | dB |
-| Limiter Ceiling | -24 | +0.5 | +2 | dB |
-| Sustain Max Gain | 1 | 160 | 200 | — |
+| Compressor Attack | 0.00001 | 0.00003 | 1 | s |
+| Presence EQ (3.2k) | -60 | +42 | +60 | dB |
+| 5kHz Peak | -60 | +40 | +60 | dB |
+| Limiter Ceiling | -24 | +1.5 | +2 | dB |
+| Sustain Max Gain | 1 | 240 | 300 | — |
 | Audio Bitrate (SDP) | — | 640 kbps | — | — |
 | Sample Rate | — | 48 kHz | — | — |
 
@@ -171,7 +171,7 @@ If still distorted, switch to **Royal Clear** preset (safe mode).
 - **Android Quetta optimized** — WebRTC hooks work best on Quetta/Chromium
 - **Extreme settings = extreme volume + potential distortion** — use Royal Clear if overwhelmed
 - **Best on calls with good mic hardware** — cheap mics will sound cheap, just louder
-- **Profile version: 8** — auto-upgrades from v7 with new 250000x defaults
+- **Profile version: 9** — auto-upgrades from v8 with new 500000x defaults
 
 ---
 

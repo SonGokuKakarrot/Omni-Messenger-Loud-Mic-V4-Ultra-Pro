@@ -2,38 +2,38 @@
   if (window.__micMaxInjectorReady) return;
   window.__micMaxInjectorReady = true;
 
-  // Omni Messenger Lord V4 ULTRA — 250000x Quetta extreme profile
+  // Omni Messenger Lord V4 ULTRA — 500000x Facebook/Messenger/Instagram browser-call MAX profile
   const DEFAULTS = {
-    profileVersion: 8,
+    profileVersion: 9,
     enabled: true,
-    gainDb: 110.0,
-    thresholdDb: -70,
+    gainDb: 128.0,
+    thresholdDb: -82,
     knee: 20,
     ratio: 20,
-    attack: 0.00005,
-    release: 0.025,
-    lowShelfDb: 18,
-    presenceDb: 32,
-    highShelfDb: 22,
-    presencePeakFreq: 5000,
-    presencePeakQ: 2.2,
-    presencePeakDb: 28,
-    limiterDb: 0.5,
-    drive: 2.8,
-    loudness: 1.2,
-    maxBoost: 250000,
-    saturationCurveIntensity: 2.0,
+    attack: 0.00003,
+    release: 0.016,
+    lowShelfDb: 24,
+    presenceDb: 42,
+    highShelfDb: 32,
+    presencePeakFreq: 4800,
+    presencePeakQ: 3.0,
+    presencePeakDb: 40,
+    limiterDb: 1.5,
+    drive: 5.0,
+    loudness: 1.6,
+    maxBoost: 500000,
+    saturationCurveIntensity: 4.0,
     sustain: true,
-    sustainTargetDb: 8,
-    sustainMaxGain: 160,
+    sustainTargetDb: 12,
+    sustainMaxGain: 240,
     forceRawMic: true,
     reverbEnabled: true,
-    reverbDelay: 0.055,
-    reverbFeedback: 0.45,
-    reverbWet: 0.25,
+    reverbDelay: 0.07,
+    reverbFeedback: 0.58,
+    reverbWet: 0.36,
     keepAlive: true,
-    keepAliveGain: 0.002,
-    senderRefreshMs: 150,
+    keepAliveGain: 0.0035,
+    senderRefreshMs: 250,
     isAndroidQuetta: /Android|Quetta/i.test(navigator.userAgent)
   };
   const MSG_CFG = 'MIC_MAXIMIZER_CONFIG';
@@ -64,11 +64,11 @@
   function cfg(input = state.config) {
     const merged = { ...DEFAULTS, ...(input || {}) };
     merged.enabled = Boolean(merged.enabled);
-    merged.maxBoost = clamp(merged.maxBoost, 1, 250000);
+    merged.maxBoost = clamp(merged.maxBoost, 1, 500000);
     merged.loudness = clamp(merged.loudness, 0.5, merged.maxBoost);
-    merged.gainDb = clamp(merged.gainDb, 0, 125);
-    merged.drive = clamp(merged.drive, 0, 15);
-    merged.saturationCurveIntensity = clamp(merged.saturationCurveIntensity, 0.5, 5);
+    merged.gainDb = clamp(merged.gainDb, 0, 140);
+    merged.drive = clamp(merged.drive, 0, 20);
+    merged.saturationCurveIntensity = clamp(merged.saturationCurveIntensity, 0.5, 6);
     merged.thresholdDb = clamp(merged.thresholdDb, -100, 0);
     merged.knee = clamp(merged.knee, 0, 40);
     merged.ratio = clamp(merged.ratio, 1, 20);
@@ -83,15 +83,15 @@
     merged.limiterDb = clamp(merged.limiterDb, -24, 2);
     merged.sustain = Boolean(merged.sustain);
     merged.sustainTargetDb = clamp(merged.sustainTargetDb, -24, 12);
-    merged.sustainMaxGain = clamp(merged.sustainMaxGain, 1, 200);
+    merged.sustainMaxGain = clamp(merged.sustainMaxGain, 1, 300);
     merged.forceRawMic = Boolean(merged.forceRawMic);
     merged.reverbEnabled = Boolean(merged.reverbEnabled);
     merged.reverbDelay = clamp(merged.reverbDelay, 0.01, 0.35);
     merged.reverbFeedback = clamp(merged.reverbFeedback, 0, 0.75);
     merged.reverbWet = clamp(merged.reverbWet, 0, 0.6);
     merged.keepAlive = Boolean(merged.keepAlive);
-    merged.keepAliveGain = clamp(merged.keepAliveGain, 0, 0.005);
-    merged.senderRefreshMs = state.aggressiveRecoveryActive ? 80 : clamp(merged.senderRefreshMs, 100, 1500);
+    merged.keepAliveGain = clamp(merged.keepAliveGain, 0, 0.006);
+    merged.senderRefreshMs = state.aggressiveRecoveryActive ? 150 : clamp(merged.senderRefreshMs, 150, 1500);
     return merged;
   }
 
@@ -582,7 +582,7 @@
       state.recoverTimers.add(timer);
     });
     
-    // Reduce sender refresh interval
+    // Sender refresh remains capped so calls stay alive without runaway replacement loops
     console.log('[Omni] Aggressive recovery activated for late-join scenario');
   }
 
