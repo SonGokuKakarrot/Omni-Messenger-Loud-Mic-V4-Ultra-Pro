@@ -7,7 +7,7 @@
       name: 'Royal Clear',
       description: 'Balanced & clean',
       config: {
-        profileVersion: 8,
+        profileVersion: 9,
         enabled: true,
         gainDb: 65.0,
         thresholdDb: -50,
@@ -43,7 +43,7 @@
       name: 'Lord V4',
       description: 'Extreme volume',
       config: {
-        profileVersion: 8,
+        profileVersion: 9,
         enabled: true,
         gainDb: 100.0,
         thresholdDb: -65,
@@ -76,39 +76,39 @@
       }
     },
     ultraQuetta: {
-      name: 'Ultra Quetta',
-      description: 'BEAST MODE - Surpass PC users',
+      name: 'Ultra Quetta MAX',
+      description: 'Loudest call mode - browser max',
       config: {
-        profileVersion: 8,
+        profileVersion: 9,
         enabled: true,
-        gainDb: 125.0,
-        thresholdDb: -80,
-        knee: 25,
+        gainDb: 140.0,
+        thresholdDb: -88,
+        knee: 28,
         ratio: 20,
-        attack: 0.00003,
-        release: 0.015,
-        lowShelfDb: 22,
-        presenceDb: 38,
-        highShelfDb: 28,
-        presencePeakDb: 35,
-        presencePeakFreq: 4500,
-        presencePeakQ: 2.8,
-        limiterDb: 1.0,
-        drive: 4.2,
-        loudness: 1.4,
-        saturationCurveIntensity: 3.5,
-        maxBoost: 250000,
+        attack: 0.00002,
+        release: 0.012,
+        lowShelfDb: 30,
+        presenceDb: 50,
+        highShelfDb: 38,
+        presencePeakDb: 48,
+        presencePeakFreq: 4800,
+        presencePeakQ: 3.4,
+        limiterDb: 1.8,
+        drive: 7.0,
+        loudness: 1.8,
+        saturationCurveIntensity: 5.2,
+        maxBoost: 500000,
         sustain: true,
         sustainTargetDb: 12,
-        sustainMaxGain: 200,
+        sustainMaxGain: 300,
         forceRawMic: true,
         reverbEnabled: true,
-        reverbDelay: 0.08,
-        reverbFeedback: 0.55,
-        reverbWet: 0.35,
+        reverbDelay: 0.09,
+        reverbFeedback: 0.62,
+        reverbWet: 0.42,
         keepAlive: true,
-        keepAliveGain: 0.003,
-        senderRefreshMs: 150
+        keepAliveGain: 0.004,
+        senderRefreshMs: 250
       }
     }
   };
@@ -240,7 +240,7 @@
     if (controlId === 'sustainMaxGain') return `${Math.round(value)}x`;
     if (controlId.includes('Gain') || controlId.includes('Db')) return `${value.toFixed(1)} dB`;
     if (controlId.includes('Bitrate')) return `${Math.round(value / 1000)} kbps`;
-    if (controlId === 'maxBoost') return `${value.toLocaleString()}x`;
+    if (controlId === 'maxBoost') return `${Math.round(value).toLocaleString()}x`;
     return value.toFixed(value < 1 ? 4 : 2);
   }
 
