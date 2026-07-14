@@ -49,6 +49,7 @@
     constrainedTracks: new WeakSet(),
     senderWatchTracks: new WeakSet(),
     peerConnections: new Set(),
+    pcAuditTimers: new WeakMap(),
     senderRecords: new Set(),
     senderBySender: new WeakMap(),
     refreshingSenders: new WeakSet(),
@@ -564,6 +565,24 @@
     } catch (_) {}
   }
 
+  function schedulePeerConnectionAudit(pc, reason = 'pc-event') {
+    if (!pc || !state.peerConnections.has(pc)) return;
+    const closed = ['closed', 'failed'].includes(pc.connectionState || pc.iceConnectionState || '');
+    if (closed) {
+      state.peerConnections.delete(pc);
+      return;
+    }
+
+    const existing = state.pcAuditTimers.get(pc);
+    if (existing) clearTimeout(existing);
+    const timer = setTimeout(() => {
+      state.pcAuditTimers.delete(pc);
+      resumeAllPipelines();
+      reconcileLiveSenders();
+    }, state.aggressiveRecoveryActive ? 25 : 75);
+    state.pcAuditTimers.set(pc, timer);
+  }
+
   function rememberPeerConnection(pc) {
     if (!pc || state.peerConnections.has(pc)) return;
     state.peerConnections.add(pc);
@@ -575,6 +594,10 @@
     }
     
     if (typeof pc.addEventListener === 'function') {
+      const audit = (event) => schedulePeerConnectionAudit(pc, event?.type || 'pc-event');
+      ['negotiationneeded', 'signalingstatechange', 'connectionstatechange', 'iceconnectionstatechange'].forEach((type) => {
+        pc.addEventListener(type, audit, { passive: true });
+      });
       pc.addEventListener('connectionstatechange', () => {
         if (['closed', 'failed'].includes(pc.connectionState)) state.peerConnections.delete(pc);
       });
@@ -802,7 +825,10 @@
       if (typeof originalCreateOffer === 'function') {
         PC.prototype.createOffer = function createOffer(...args) {
           rememberPeerConnection(this);
-          return originalCreateOffer.apply(this, args).then((offer) => cloneDescriptionWithSdp(offer, enhanceAudioSdp(offer?.sdp)));
+          return originalCreateOffer.apply(this, args).then((offer) => {
+            schedulePeerConnectionAudit(this, 'createOffer');
+            return cloneDescriptionWithSdp(offer, enhanceAudioSdp(offer?.sdp));
+          });
         };
       }
 
@@ -810,7 +836,10 @@
       if (typeof originalCreateAnswer === 'function') {
         PC.prototype.createAnswer = function createAnswer(...args) {
           rememberPeerConnection(this);
-          return originalCreateAnswer.apply(this, args).then((answer) => cloneDescriptionWithSdp(answer, enhanceAudioSdp(answer?.sdp)));
+          return originalCreateAnswer.apply(this, args).then((answer) => {
+            schedulePeerConnectionAudit(this, 'createAnswer');
+            return cloneDescriptionWithSdp(answer, enhanceAudioSdp(answer?.sdp));
+          });
         };
       }
 
@@ -819,7 +848,9 @@
         PC.prototype.setLocalDescription = function setLocalDescription(desc) {
           rememberPeerConnection(this);
           const patched = cloneDescriptionWithSdp(desc, enhanceAudioSdp(desc?.sdp));
-          return originalSetLocalDescription.call(this, patched);
+          const result = originalSetLocalDescription.call(this, patched);
+          Promise.resolve(result).then(() => schedulePeerConnectionAudit(this, 'setLocalDescription')).catch(() => {});
+          return result;
         };
       }
 
