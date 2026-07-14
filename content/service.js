@@ -18,7 +18,7 @@
     presencePeakFreq: 4800,
     presencePeakQ: 3.0,
     presencePeakDb: 40,
-    limiterDb: 1.5,
+    limiterDb: -0.1,
     drive: 5.0,
     loudness: 1.6,
     maxBoost: 500000,
