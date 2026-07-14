@@ -93,7 +93,7 @@
         presencePeakDb: 48,
         presencePeakFreq: 4800,
         presencePeakQ: 3.4,
-        limiterDb: 1.8,
+        limiterDb: -0.1,
         drive: 7.0,
         loudness: 1.8,
         saturationCurveIntensity: 5.2,

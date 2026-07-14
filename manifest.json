@@ -3,7 +3,7 @@
   "name": "Omni Messenger Lord V4",
   "short_name": "Lord V4",
   "version": "4.4.0",
-  "description": "Developed by Omni. 500000x Facebook, Messenger, and Instagram browser-call microphone maximizer for Android extension browsers with raw-mic WebRTC hooks and live DSP controls.",
+  "description": "Developed by Omni. 500000x Facebook, Messenger, and Instagram browser-call microphone maximizer for PC Chrome with raw-mic WebRTC hooks and live DSP controls.",
   "permissions": [
     "storage",
     "tabs"
