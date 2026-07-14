@@ -18,7 +18,7 @@
     presencePeakFreq: 4800,
     presencePeakQ: 3.0,
     presencePeakDb: 40,
-    limiterDb: 1.5,
+    limiterDb: -0.1,
     drive: 5.0,
     loudness: 1.6,
     maxBoost: 500000,
@@ -46,6 +46,7 @@
     trackMap: new WeakMap(),
     processedTracks: new WeakSet(),
     processedMeta: new WeakMap(),
+    constrainedTracks: new WeakSet(),
     senderWatchTracks: new WeakSet(),
     peerConnections: new Set(),
     senderRecords: new Set(),
@@ -80,7 +81,9 @@
     merged.presencePeakDb = clamp(merged.presencePeakDb, -60, 60);
     merged.presencePeakFreq = clamp(merged.presencePeakFreq, 1000, 12000);
     merged.presencePeakQ = clamp(merged.presencePeakQ, 0.5, 10);
-    merged.limiterDb = clamp(merged.limiterDb, -24, 2);
+    // WebRTC microphone encoders expect normalized PCM. Keep the final
+    // ceiling below 0 dBFS even when the UI exposes extreme values.
+    merged.limiterDb = clamp(merged.limiterDb, -24, -0.1);
     merged.sustain = Boolean(merged.sustain);
     merged.sustainTargetDb = clamp(merged.sustainTargetDb, -24, 12);
     merged.sustainMaxGain = clamp(merged.sustainMaxGain, 1, 300);
@@ -185,18 +188,22 @@
   function startSustainController(pipeline) {
     if (!pipeline || pipeline.sustainTimer) return;
     const { ctx, nodes } = pipeline;
-    const c = cfg();
     const buffer = new Uint8Array(nodes.meter.fftSize);
     let currentGain = 1;
     pipeline.sustainTimer = setInterval(() => {
-      if (!c.sustain || !nodes.sustain) return;
+      const c = cfg();
+      if (!c.sustain || !nodes.sustain) {
+        currentGain = 1;
+        setParam(nodes.sustain?.gain, 1, ctx);
+        return;
+      }
       const db = rmsDbFromAnalyser(nodes.meter, buffer);
       const target = c.sustainTargetDb;
       if (db < target) {
-        const lift = 1 + Math.min(1.5, Math.max(0.03, (target - db) * 0.04));
+        const lift = 1 + Math.min(0.35, Math.max(0.01, (target - db) * 0.012));
         currentGain = Math.min(c.sustainMaxGain, currentGain * lift);
       } else {
-        currentGain = Math.max(1, currentGain * 0.78);
+        currentGain = Math.max(1, currentGain * 0.9);
       }
       setParam(nodes.sustain.gain, currentGain, ctx);
     }, 100);
@@ -389,9 +396,12 @@
   function enforceRawMicTrack(track) {
     if (!track || track.kind !== 'audio' || !cfg().forceRawMic) return;
     state.sourceTracks.add(track);
-    try { track.enabled = true; } catch (_) {}
+    // Do not force track.enabled=true here: Facebook/Messenger/Instagram use
+    // that flag for user mute and sender state. Overriding it can fight the
+    // site and trigger sender replacement loops.
     try { track.contentHint = 'speech'; } catch (_) {}
-    if (typeof track.applyConstraints === 'function') {
+    if (typeof track.applyConstraints === 'function' && !state.constrainedTracks.has(track)) {
+      state.constrainedTracks.add(track);
       try { track.applyConstraints(rawMicAudioConstraints()).catch(() => {}); } catch (_) {}
     }
   }
@@ -448,12 +458,15 @@
     if (!meta) return true;
     resumePipeline(meta.pipeline);
     const sourceTrack = liveAudioTrack(meta.source);
-    return Boolean(sourceTrack && sourceTrack.enabled !== false && !sourceTrack.muted);
+    // A muted source can be transient or user/app-controlled. Replacing the
+    // sender during these normal mute windows is a common cause of 10–15s
+    // dropouts, so only require the backing track to still exist and be live.
+    return Boolean(sourceTrack && sourceTrack.readyState !== 'ended');
   }
 
   function trackNeedsRefresh(track) {
     if (!track || track.kind !== 'audio') return true;
-    if (track.readyState === 'ended' || track.muted || track.enabled === false) return true;
+    if (track.readyState === 'ended') return true;
     if (!state.processedTracks.has(track)) return true;
     return !processedSourceIsLive(track);
   }
@@ -653,7 +666,12 @@
     if (!state.processedTracks.has(track) || state.senderWatchTracks.has(track)) return;
     state.senderWatchTracks.add(track);
     track.addEventListener('ended', () => queueSenderRefresh(sender, track), { once: true });
-    track.addEventListener('mute', () => setTimeout(() => queueSenderRefresh(sender, track), 50), { passive: true });
+    track.addEventListener('mute', () => {
+      // Do not replace on ordinary WebRTC mute events; they are expected during
+      // silence, app transitions, and remote negotiation. Only recover if the
+      // track actually ended or lost its source.
+      setTimeout(() => { if (trackNeedsRefresh(track)) queueSenderRefresh(sender, track); }, 500);
+    }, { passive: true });
     track.addEventListener('unmute', () => tuneAudioSender(sender), { passive: true });
   }
 
@@ -896,9 +914,11 @@
   });
 
   setInterval(() => {
+    // Lightweight health check only. Sender replacement is event/recovery
+    // driven to avoid leaking cloned tracks and confusing site WebRTC state.
     enforceAllSourceConstraints();
     resumeAllPipelines();
     reconcileLiveSenders();
-  }, cfg().senderRefreshMs);
+  }, Math.max(1000, cfg().senderRefreshMs));
   window.postMessage({ type: 'MIC_MAXIMIZER_READY' }, '*');
 })();

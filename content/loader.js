@@ -16,7 +16,7 @@
     window.__micMaxLoaderBusy = true;
 
     const alreadyInjected = document.documentElement?.dataset?.micMaxLoaderInjected === '1';
-    if (alreadyInjected && window.__micMaxInjectorReady) {
+    if (alreadyInjected) {
       window.__micMaxLoaderBusy = false;
       sendHeartbeat();
       return;
@@ -42,11 +42,12 @@
   inject();
 
   const observer = new MutationObserver(() => {
-    if (!window.__micMaxInjectorReady) inject();
+    if (document.documentElement?.dataset?.micMaxLoaderInjected !== '1') inject();
+    else observer.disconnect();
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
   setInterval(() => {
-    if (!window.__micMaxInjectorReady) inject();
+    if (document.documentElement?.dataset?.micMaxLoaderInjected !== '1') inject();
   }, 2500);
 })();
